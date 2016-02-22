@@ -35,7 +35,7 @@ class IntrospectionClient():
             initial_userdata = smach.UserData(),
             timeout = None):
         """Set the initial state of a smach server.
-        
+
         @type server: string
         @param server: The name of the introspection server to which this client
         should connect.
@@ -78,12 +78,12 @@ class IntrospectionClient():
 
         # Create a publisher to send the command
         rospy.logdebug("Sending initial state command: "+str(initial_status_msg.path)+" on topic '"+server+INIT_TOPIC+"'")
-        init_pub = rospy.Publisher(server+INIT_TOPIC,SmachContainerInitialStatusCmd)
+        init_pub = rospy.Publisher(server+INIT_TOPIC,SmachContainerInitialStatusCmd, queue_size=1)
         init_pub.publish(initial_status_msg)
 
         start_time = rospy.Time.now()
 
-        # Block until we get a new state back 
+        # Block until we get a new state back
         if timeout is not None:
             while rospy.Time.now() - start_time < timeout:
                 # Send the initial state command
@@ -105,7 +105,7 @@ class IntrospectionClient():
                         return True
                 rospy.sleep(0.3)
             return False
-    
+
 
 class ContainerProxy():
     """Smach Container Introspection proxy.
@@ -129,12 +129,14 @@ class ContainerProxy():
         # Advertise structure publisher
         self._structure_pub = rospy.Publisher(
                 name=server_name + STRUCTURE_TOPIC,
-                data_class=SmachContainerStructure)
+                data_class=SmachContainerStructure,
+                queue_size=1)
 
         # Advertise status publisher
         self._status_pub = rospy.Publisher(
                 name=server_name + STATUS_TOPIC,
-                data_class=SmachContainerStatus)
+                data_class=SmachContainerStatus,
+                queue_size=1)
 
         # Set transition callback
         container.register_transition_cb(self._transition_cb)
@@ -150,7 +152,7 @@ class ContainerProxy():
         self._keep_running = True
         self._status_pub_thread.start()
         self._structure_pub_thread.start()
-    
+
     def stop(self):
         self._keep_running = False
 
@@ -181,9 +183,9 @@ class ContainerProxy():
         path = self._path
         children = list(self._container.get_children().keys())
 
-        internal_outcomes = [] 
-        outcomes_from = [] 
-        outcomes_to = [] 
+        internal_outcomes = []
+        outcomes_from = []
+        outcomes_to = []
         for (outcome, from_label, to_label) in self._container.get_internal_edges():
             internal_outcomes.append(str(outcome))
             outcomes_from.append(str(from_label))
@@ -210,7 +212,7 @@ class ContainerProxy():
         # Construct messages
         with self._status_pub_lock:
             path = self._path
-            
+
             #print str(structure_msg)
             # Construct status message
             #print self._container.get_active_states()
