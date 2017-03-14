@@ -390,6 +390,10 @@ class SimpleActionState(State):
         self._status = SimpleActionState.INACTIVE
         self._done_cond.release()
 
+        if self.preempt_requested():
+            outcome = 'preempted'
+            self.service_preempt()
+
         return outcome
 
     ### Action client callbacks
