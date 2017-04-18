@@ -37,6 +37,7 @@ class ConditionState(smach.State):
     def execute(self, ud):
         start_time = rospy.Time.now()
         n_checks = 0
+        outcome = 'false'
 
         while self._max_checks == -1 or n_checks <= self._max_checks:
             # Check for timeout
@@ -45,14 +46,19 @@ class ConditionState(smach.State):
             # Check for preemption
             if self.preempt_requested():
                 self.service_preempt()
-                return 'preempted'
+                outcome = 'preempted'
+                break;
             # Call the condition
             try:
                 if self._cond_cb(ud):
-                    return 'true'
+                    outcome = 'true'
+                    break;
             except:
                 raise smach.InvalidUserCodeError("Error thrown while executing condition callback %s: " % str(self._cond_cb) +traceback.format_exc())
             n_checks += 1
             rospy.sleep(self._poll_rate)
 
-        return 'false'
+        if self.preempt_requested():
+            self.service_preempt()
+            outcome = 'preempted'
+        return outcome
