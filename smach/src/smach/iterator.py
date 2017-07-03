@@ -55,7 +55,7 @@ class Iterator(smach.container.Container):
     @staticmethod
     def set_iteritems(it, it_label='it_data'):
         """Set the list or generator for the iterator to iterate over.
-        
+
         @type it: iterable
         @param iteritems: Items to iterate over on each cycle
 
@@ -81,10 +81,10 @@ class Iterator(smach.container.Container):
             break_outcomes = [],
             final_outcome_map = {}):
         """Set the contained state
-        
+
         @type label: string
         @param label: The label of the state being added.
-        
+
         @type state: L{smach.State}
         @param state: An instance of a class implementing the L{smach.State} interface.
 
@@ -167,14 +167,16 @@ class Iterator(smach.container.Container):
                 raise ex
             except:
                 raise smach.InvalidUserCodeError("Could not execute iterator state '%s' of type '%s': " % ( self._state_label, self._state) + traceback.format_exc())
-                
+
 
 
             # Check if we should stop preemptively
-            if self._preempt_requested\
-                    or outcome in self._break_outcomes\
+            if self.preempt_requested():
+                self.service_preempt()
+                outcome = 'preempted'
+                break;
+            if outcome in self._break_outcomes\
                     or (len(self._loop_outcomes) > 0 and outcome not in self._loop_outcomes):
-                self._preempt_requested = False
                 break
             self.call_transition_cbs()
 
@@ -192,10 +194,9 @@ class Iterator(smach.container.Container):
         return outcome
 
     def request_preempt(self):
-        self._preempt_requested = True
-        if self._is_running:
-            self._state.request_preempt()
-    
+        rospy.loginfo("Preempt requested on iterator")
+        smach.State.request_preempt(self)
+
     ### Container interface
     def get_children(self):
         return {self._state_label: self._state}
@@ -229,7 +230,7 @@ class Iterator(smach.container.Container):
 
     def get_internal_edges(self):
         int_edges = []
-        
+
         for outcome in self._loop_outcomes:
             int_edges.append([outcome, self._state_label, self._state_label])
 
