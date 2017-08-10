@@ -194,7 +194,7 @@ class Iterator(smach.container.Container):
         return outcome
 
     def request_preempt(self):
-        rospy.loginfo("Preempt requested on iterator")
+        smach.loginfo("Preempt requested on iterator")
         smach.State.request_preempt(self)
 
     ### Container interface
