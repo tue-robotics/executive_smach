@@ -1,3 +1,4 @@
+# coding=utf-8
 
 import roslib; roslib.load_manifest('smach_ros')
 import rospy
@@ -255,7 +256,12 @@ class SimpleActionState(State):
         rospy.loginfo("Preempt requested on action '%s'" % (self._action_name))
         smach.State.request_preempt(self)
         if self._status == SimpleActionState.ACTIVE:
-            rospy.loginfo("Preempt on action '%s' cancelling goal: \n%s" % (self._action_name, str(self._goal)))
+            goal = None
+            if isinstance(self._goal, unicode):
+                goal = self._goal.encode('utf8')
+            else:
+                goal = self._goal
+            rospy.loginfo("Preempt on action '%s' cancelling goal: \n%s" % (self._action_name, goal))
             # Cancel the goal
             self._action_client.cancel_goal()
 
