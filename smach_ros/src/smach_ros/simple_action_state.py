@@ -279,6 +279,17 @@ class SimpleActionState(State):
                 # In case of preemption we probably didn't connect
                 rospy.loginfo("Connected to action server '%s'." % self._action_name)
 
+        # Check if server is still available
+        if self._status is SimpleActionState.INACTIVE:
+            try:
+                if not self._action_client.wait_for_server(rospy.Duration(1.0)):
+                    rospy.logerr("Failed to wait for action server '%s'" % (self._action_name))
+                    return 'aborted'
+            except:
+                if not rospy.core._in_shutdown: # This is a hack, wait_for_server should not throw an exception just because shutdown was called
+                    rospy.logerr("Failed to wait for action server '%s'" % (self._action_name))
+                    return 'aborted'
+
         # Check for preemption before executing
         if self.preempt_requested():
             rospy.loginfo("Preempting %s before sending goal." % self._action_name)
