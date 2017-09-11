@@ -1,3 +1,4 @@
+# coding=utf-8
 
 import roslib; roslib.load_manifest('smach_ros')
 import rospy
@@ -255,7 +256,12 @@ class SimpleActionState(State):
         rospy.loginfo("Preempt requested on action '%s'" % (self._action_name))
         smach.State.request_preempt(self)
         if self._status == SimpleActionState.ACTIVE:
-            rospy.loginfo("Preempt on action '%s' cancelling goal: \n%s" % (self._action_name, str(self._goal)))
+            goal = None
+            if isinstance(self._goal, unicode):
+                goal = self._goal.encode('utf8')
+            else:
+                goal = self._goal
+            rospy.loginfo("Preempt on action '%s' cancelling goal: \n%s" % (self._action_name, goal))
             # Cancel the goal
             self._action_client.cancel_goal()
 
@@ -278,6 +284,17 @@ class SimpleActionState(State):
             if not self.preempt_requested():
                 # In case of preemption we probably didn't connect
                 rospy.loginfo("Connected to action server '%s'." % self._action_name)
+
+        # Check if server is still available
+        if self._status is SimpleActionState.INACTIVE:
+            try:
+                if not self._action_client.wait_for_server(rospy.Duration(1.0)):
+                    rospy.logerr("Failed to wait for action server '%s'" % (self._action_name))
+                    return 'aborted'
+            except:
+                if not rospy.core._in_shutdown: # This is a hack, wait_for_server should not throw an exception just because shutdown was called
+                    rospy.logerr("Failed to wait for action server '%s'" % (self._action_name))
+                    return 'aborted'
 
         # Check for preemption before executing
         if self.preempt_requested():
