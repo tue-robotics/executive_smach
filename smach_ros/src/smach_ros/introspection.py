@@ -84,7 +84,7 @@ class IntrospectionClient():
 
         start_time = rospy.Time.now()
 
-        # Block until we get a new state back
+        # Block until we get a new state back 
         if timeout is not None:
             while rospy.Time.now() - start_time < timeout:
                 # Send the initial state command
