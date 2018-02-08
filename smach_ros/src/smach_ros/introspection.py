@@ -78,12 +78,13 @@ class IntrospectionClient():
 
         # Create a publisher to send the command
         rospy.logdebug("Sending initial state command: "+str(initial_status_msg.path)+" on topic '"+server+INIT_TOPIC+"'")
-        init_pub = rospy.Publisher(server+INIT_TOPIC,SmachContainerInitialStatusCmd, queue_size=1)
+        init_pub = rospy.Publisher(server+INIT_TOPIC,
+                SmachContainerInitialStatusCmd, queue_size=1)
         init_pub.publish(initial_status_msg)
 
         start_time = rospy.Time.now()
 
-        # Block until we get a new state back
+        # Block until we get a new state back 
         if timeout is not None:
             while rospy.Time.now() - start_time < timeout:
                 # Send the initial state command
