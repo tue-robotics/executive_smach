@@ -50,8 +50,8 @@ class SimpleActionState(State):
             outcomes = [],
             # Timeouts
             exec_timeout = None,
-            preempt_timeout = rospy.Duration(60.0),
-            server_wait_timeout = rospy.Duration(60.0)
+            cancel_timeout = rospy.Duration(15.0),
+            server_wait_timeout = rospy.Duration(60.0),
             ):
         """Constructor for SimpleActionState action client wrapper.
         
@@ -106,10 +106,11 @@ class SimpleActionState(State):
         to the delegate action. This is C{None} by default, which implies no
         timeout. 
 
-        @type preempt_timeout: C{rospy.Duration}
-        @param preempt_timeout: This is the timeout used for aborting after a
-        preempt has been sent to the action and no result has been received. This
-        timeout begins counting after a preempt message has been sent.
+        @type cancel_timeout: C{rospy.Duration}
+        @param cancel_timeout: This is the timeout used for aborting the state after a
+        preempt has been requested or the execution timeout occured and no result
+        from the action has been received. This timeout begins counting after cancel 
+        to the action server has been sent.
 
         @type server_wait_timeout: C{rospy.Duration}
         @param server_wait_timeout: This is the timeout used for aborting while
@@ -127,7 +128,7 @@ class SimpleActionState(State):
         self._goal_status = 0
         self._goal_result = None
         self._exec_timeout = exec_timeout
-        self._preempt_timeout = preempt_timeout
+        self._cancel_timeout = cancel_timeout
         self._server_wait_timeout = server_wait_timeout
 
         # Set goal generation policy
@@ -208,7 +209,7 @@ class SimpleActionState(State):
 
         # Declare some status variables
         self._activate_time = rospy.Time.now()
-        self._preempt_time = rospy.Time.now()
+        self._cancel_time = rospy.Time.now()
         self._duration = rospy.Duration(0.0)
         self._status = SimpleActionState.WAITING_FOR_SERVER
 
@@ -218,6 +219,7 @@ class SimpleActionState(State):
         self._action_wait_thread.start()
 
         self._execution_timer_thread = None
+        self._cancelation_timer_thread = None
 
         # Condition variables for threading synchronization
         self._done_cond = threading.Condition()
@@ -247,9 +249,15 @@ class SimpleActionState(State):
                 if not rospy.is_shutdown():
                     rospy.logerr("Failed to sleep while running '%s'" % self._action_name)
             if rospy.Time.now() - self._activate_time > self._exec_timeout:
-                rospy.logwarn("Action %s timed out after %d seconds." % (self._action_name, self._exec_timeout.to_sec()))
+                goal = None
+                if isinstance(self._goal, unicode):
+                    goal = self._goal.encode('utf8')
+                else:
+                    goal = self._goal
+                rospy.logwarn("Action %s timed out after %d seconds. Cancelling goal: \n%s" % (self._action_name, self._exec_timeout.to_sec(), goal))
                 # Cancel the goal
-                self._action_client.cancel_goal()
+                self.cancel_goal()
+                break
 
     ### smach State API
     def request_preempt(self):
@@ -263,7 +271,27 @@ class SimpleActionState(State):
                 goal = self._goal
             rospy.loginfo("Preempt on action '%s' cancelling goal: \n%s" % (self._action_name, goal))
             # Cancel the goal
-            self._action_client.cancel_goal()
+            self.cancel_goal()
+
+    def cancel_goal(self):
+        self._action_client.cancel_goal()
+        self._cancel_time = rospy.Time.now()
+        self._cancelation_timer_thread = threading.Thread(name=self._action_name+'/cancel_watchdog', target=self._cancelation_timer)
+        self._cancelation_timer_thread.start()
+
+    def _cancelation_timer(self):
+        while self._status == SimpleActionState.ACTIVE and not rospy.is_shutdown():
+            try:
+                rospy.sleep(0.1)
+            except:
+                if not rospy.is_shutdown():
+                    rospy.logerr("Failed to sleep while running '%s'" % self._action_name)
+            if rospy.Time.now() - self._cancel_time > self._cancel_timeout:
+                rospy.logerr("Action %s could not be canceled for more than %s seconds. Force state transition!" % self._cancel_timeout.to_sec())
+                self._status = SimpleActionState.INACTIVE
+                self._done_cond.acquire()
+                self._done_cond.notify()
+                self._done_cond.release()
 
     def execute(self, ud):
         """Called when executing a state.
