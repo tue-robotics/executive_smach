@@ -287,7 +287,7 @@ class SimpleActionState(State):
                 if not rospy.is_shutdown():
                     rospy.logerr("Failed to sleep while running '%s'" % self._action_name)
             if rospy.Time.now() - self._cancel_time > self._cancel_timeout:
-                rospy.logerr("Action %s could not be canceled for more than %s seconds. Force state transition!" % self._cancel_timeout.to_sec())
+                rospy.logerr("Action %s could not be canceled for more than %d seconds. Force state transition!" % (self._action_name, self._cancel_timeout.to_sec()))
                 self._status = SimpleActionState.INACTIVE
                 self._done_cond.acquire()
                 self._done_cond.notify()
