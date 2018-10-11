@@ -218,12 +218,12 @@ class StateMachine(smach.container.Container):
 
         # Check if a preempt was requested before or while the last state was running
         if self.preempt_requested():
-            smach.loginfo("Preempt requested on state machine before executing the next state.")
+            smach.logwarn("Preempt requested on state machine before executing the next state.")
             # We were preempted
             if self._preempted_state is not None:
                 # We were preempted while the last state was running
                 if self._preempted_state.preempt_requested():
-                    smach.loginfo("Last state '%s' did not service preempt. Preempting next state '%s' before executing..." % (self._preempted_label, self._current_label))
+                    smach.logwarn("Last state '%s' did not service preempt. Preempting next state '%s' before executing..." % (self._preempted_label, self._current_label))
                     # The flag was not reset, so we need to keep preempting 
                     # (this will reset the current preempt)
                     self._preempt_current_state()
@@ -245,6 +245,7 @@ class StateMachine(smach.container.Container):
                         self._current_state.get_registered_input_keys(),
                         self._current_state.get_registered_output_keys(),
                         self._remappings[self._current_label]))
+            self._current_outcome = outcome
         except smach.InvalidUserCodeError as ex:
             smach.logerr("State '%s' failed to execute." % self._current_label)
             raise ex
@@ -373,12 +374,11 @@ class StateMachine(smach.container.Container):
         This will attempt to preempt the currently active state.
         """
         with self._state_transitioning_lock:
-            # Aleways Set this container's preempted flag
+            # Allways Set this container's preempted flag
             self._preempt_requested = True
             # Only propagate preempt if the current state is defined
             if self._current_state is not None:
                 self._preempt_current_state()
-                self.service_preempt()
 
     def _preempt_current_state(self):
         """Preempt the current state (might not be executing yet).
