@@ -145,6 +145,8 @@ class CBState(State):
         self._cb = cb
         self._cb_args = cb_args
         self._cb_kwargs = cb_kwargs
+
+        self.register_outcomes(["preempted"])
         
         if smach.util.has_smach_interface(cb):
             self._cb_input_keys = cb.get_registered_input_keys()
@@ -156,5 +158,12 @@ class CBState(State):
             self.register_outcomes(self._cb_outcomes)
 
     def execute(self, ud):
-        return self._cb(ud, *self._cb_args, **self._cb_kwargs)
+        outcome = self._cb(ud, *self._cb_args, **self._cb_kwargs)
+        if self.preempt_requested():
+            self.service_preempt()
+            outcome = "preempted"
+        return outcome
+
+    def request_preempt(self):
+        smach.State.request_preempt(self)
 
