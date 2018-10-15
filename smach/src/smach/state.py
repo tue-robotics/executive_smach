@@ -22,7 +22,7 @@ class State(object):
 
         @type input_keys: array of strings
         @param input_keys: The userdata keys from which this state might read
-        at runtime. 
+        at runtime.
 
         @type output_keys: array of strings
         @param output_keys: The userdata keys to which this state might write
@@ -53,7 +53,7 @@ class State(object):
         @param ud: Userdata for the scope in which this state is executing
         """
         raise NotImplementedError()
-    
+
     ### SMACH Interface API
     def register_outcomes(self, new_outcomes):
         """Add outcomes to the outcome set."""
@@ -116,7 +116,7 @@ class State(object):
     def preempt_requested(self):
         """True if a preempt has been requested."""
         return self._preempt_requested
-    
+
     def request_shutdown(self):
         """Sets action on shutdown to request_preempt"""
         self._shutdown_requested = True
@@ -145,7 +145,7 @@ class CBState(State):
         self._cb = cb
         self._cb_args = cb_args
         self._cb_kwargs = cb_kwargs
-        
+
         if smach.util.has_smach_interface(cb):
             self._cb_input_keys = cb.get_registered_input_keys()
             self._cb_output_keys = cb.get_registered_output_keys()
@@ -157,4 +157,3 @@ class CBState(State):
 
     def execute(self, ud):
         return self._cb(ud, *self._cb_args, **self._cb_kwargs)
-
