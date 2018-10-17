@@ -234,6 +234,7 @@ class StateMachine(smach.container.Container):
             else:
                 # We were preempted after the last state was running
                 # So we should preempt this state before we execute it
+                smach.logwarn("State Machine preempted after the last state was running. Preempting this state '%s' before executing..." %self._current_label)
                 self._preempt_current_state()
 
         # Execute the state
