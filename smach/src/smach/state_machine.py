@@ -229,6 +229,8 @@ class StateMachine(smach.container.Container):
                     self._preempt_current_state()
                 else:
                     # The flag was reset, so the container can reset
+                    smach.logwarn("Preemption flag on preempted state '%s' was reset. Container can reset and continue..." % (self._preempted_label))
+                    smach.logwarn("This could be errornous because state machine should preempt and we still continue. Most likely we will just preempt execution")
                     self._preempt_requested = False
                     self._preempted_state = None
             else:
