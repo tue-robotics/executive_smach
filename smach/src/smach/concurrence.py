@@ -264,6 +264,9 @@ class Concurrence(smach.container.Container):
                     smach.logwarn("State '%s' in concurrence did not service preempt." % label) 
                     # Recall the preempt if it hasn't been serviced
                     state.recall_preempt()
+                elif self._child_outcomes[label] != "preempted":
+                    smach.logwarn("State '%s' already had outcome '%s' despite concurrent container is in preemption. Setting outcome to 'preempted'"%(label, self._child_outcomes[label]))
+                    self._child_outcomes[label] = "preempted"
             if children_preempts_serviced:
                 smach.loginfo("Concurrence serviced preempt.")
                 self.service_preempt()
