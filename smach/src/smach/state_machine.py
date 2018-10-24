@@ -350,6 +350,9 @@ class StateMachine(smach.container.Container):
             smach.loginfo("State machine starting in initial state '%s' with userdata: \n\t%s" %
                     (self._current_label, list(self.userdata.keys())))
 
+            if self._preempt_requested:
+                smach.logwarn("Preempt on State machine requested before even executing initial state. This could be a bug. Did last execution not service preemption?")
+
 
             # Call start callbacks
             self.call_start_cbs()
