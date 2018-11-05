@@ -371,6 +371,9 @@ class StateMachine(smach.container.Container):
             # We're no longer running
             self._is_running = False
 
+            if self._preempt_requested:
+                self.service_preempt()
+
         return container_outcome
 
     ## Preemption management
