@@ -236,7 +236,7 @@ class StateMachine(smach.container.Container):
             else:
                 # We were preempted after the last state was running
                 # So we should preempt this state before we execute it
-                smach.logwarn("State Machine preempted after the last state was running. Preempting this state '%s' before executing..." %self._current_label)
+                smach.logwarn("State Machine preempted after the last state was running. Preempting state '%s' before executing..." %self._current_label)
                 self._preempt_current_state()
 
         # Execute the state
@@ -305,7 +305,7 @@ class StateMachine(smach.container.Container):
 
                 # Spew some info
                 smach.loginfo("State machine terminating '%s':'%s':'%s'" %
-                              (last_state_label, outcome, transition_target))
+                                (last_state_label, outcome, transition_target))
 
                 # Call termination callbacks
                 self.call_termination_cbs([last_state_label],transition_target)
@@ -372,6 +372,7 @@ class StateMachine(smach.container.Container):
             self._is_running = False
 
             if self._preempt_requested:
+                smach.logwarn("State machine about to return outcome even preemption requested and not served. Will service preemption")
                 self.service_preempt()
 
         return container_outcome
@@ -383,6 +384,7 @@ class StateMachine(smach.container.Container):
         This will attempt to preempt the currently active state.
         """
         with self._state_transitioning_lock:
+            smach.logwarn("Request preemption on state machine")
             # Allways Set this container's preempted flag
             self._preempt_requested = True
             # Only propagate preempt if the current state is defined
