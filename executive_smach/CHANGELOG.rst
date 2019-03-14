@@ -2,6 +2,12 @@
 Changelog for package executive_smach
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge branch 'indigo-devel' of github.com:unity-robotics/executive_smach into indigo-devel
+* merge
+* Contributors: Benjamin Maidel
+
 2.0.1 (2017-06-08)
 ------------------
 * [fix] SimpleActionState will wait forever for a missing ActionServer `#41 <https://github.com/ros/executive_smach/pull/41>`_

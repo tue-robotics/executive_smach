@@ -2,6 +2,49 @@
 Changelog for package smach
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#8 <https://github.com/mojin-robotics/executive_smach/issues/8>`_ from benmaidel/more_debugging
+  additional logging
+* additional logging
+* Merge pull request `#7 <https://github.com/mojin-robotics/executive_smach/issues/7>`_ from benmaidel/fix/sm_preemption
+  service preemption on StateMachine
+* service preemption on StateMachine
+* Merge pull request `#6 <https://github.com/mojin-robotics/executive_smach/issues/6>`_ from benmaidel/more_debugging
+  added more debugging output
+* added more debugging output
+* Merge pull request `#5 <https://github.com/mojin-robotics/executive_smach/issues/5>`_ from benmaidel/additional_logging
+  added more debugging output
+* added more debugging output
+* Merge pull request `#4 <https://github.com/mojin-robotics/executive_smach/issues/4>`_ from benmaidel/fix/concurrent_preemption
+  Fix/concurrent preemption
+* overwrite outcome to "preempted" on already finished states when concurrent container preempts
+* print warning on preemption error
+* Merge pull request `#3 <https://github.com/mojin-robotics/executive_smach/issues/3>`_ from benmaidel/fix/state_transitions
+  fix state transitions and preemption behaviour
+* removed preemption outcome from smach.CBState because smach.StateMachine will handle this cases
+* add preemption to callback states
+* no not service preemption before running state is set to preemption
+* Merge branch 'indigo-devel' of github.com:unity-robotics/executive_smach into indigo-devel
+* merge
+* fix syntax error for logging
+* Merge pull request `#2 <https://github.com/mojin-robotics/executive_smach/issues/2>`_ from ipa-fmw/fix/iterator_preemption
+  fix syntax error for logging
+* Merge pull request `#5 <https://github.com/mojin-robotics/executive_smach/issues/5>`_ from ipa-bnm/fix/iterator_preemption
+  fixed possible iterator preemption error
+* fix syntax error for logging
+* fixed possible iterator preemption error
+* Merge pull request `#1 <https://github.com/mojin-robotics/executive_smach/issues/1>`_ from ipa-bnm/indigo-devel
+  modifications for project
+* Merge branch 'feature/ConcurrencyFix' of github.com:athackst/executive_smach into indigo-devel
+* small cleanup
+* added request_shutdown function, added checks on _shutdown_requested to cleanly exit statemachine and concurrence
+* Merge branch 'feature/ConcurrencyFixTemp' into feature/ConcurrencyFix
+* added shutdown handler, added threaded start to smach_ros
+* removed check of smach.is_shutdown from waiting for threads to terminate -- may or may not be a good idea
+* fixed ctrl+C on a concurrence container
+* Contributors: Allison Thackston, Benjamin Maidel, Felix Messmer, Florian Weisshardt, ipa-fmw
+
 2.0.1 (2017-06-08)
 ------------------
 * [maintenance] Update maintainer. switching to package.xml format 2
