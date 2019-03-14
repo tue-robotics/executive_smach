@@ -2,8 +2,8 @@
 Changelog for package smach_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2019-03-14)
+------------------
 * Merge branch 'indigo-devel' of github.com:unity-robotics/executive_smach into indigo-devel
 * merge
 * Contributors: Benjamin Maidel

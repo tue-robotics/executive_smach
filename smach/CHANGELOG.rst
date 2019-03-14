@@ -2,8 +2,8 @@
 Changelog for package smach
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2019-03-14)
+------------------
 * Merge pull request `#8 <https://github.com/mojin-robotics/executive_smach/issues/8>`_ from benmaidel/more_debugging
   additional logging
 * additional logging
