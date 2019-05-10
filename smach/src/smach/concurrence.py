@@ -171,6 +171,7 @@ class Concurrence(smach.container.Container):
         self._outcome_cb = outcome_cb
         self._child_termination_cb = child_termination_cb
         self._child_outcomes = {}
+        self._child_exceptions = {}
 
         # Condition variables for threading synchronization
         self._user_code_exception = False
@@ -248,7 +249,9 @@ class Concurrence(smach.container.Container):
         # Check for user code exception
         if self._user_code_exception:
             self._user_code_exception = False
-            raise smach.InvalidStateError("A concurrent state raised an exception during execution.")
+            exception = smach.InvalidStateError("A concurrent state raised an exception during execution: {}".format(self._child_exceptions))
+            self._child_exceptions = {}
+            raise exception
 
         # Check for preempt
         if self.preempt_requested():
@@ -337,6 +340,7 @@ class Concurrence(smach.container.Container):
                 self._remappings[label]))
         except:
             self._user_code_exception = True
+            self._child_exceptions[label] = traceback.format_exc()
             with self._done_cond:
                 self._done_cond.notify_all()
             raise smach.InvalidStateError(("Could not execute child state '%s': " % label)+traceback.format_exc())
