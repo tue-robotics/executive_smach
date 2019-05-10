@@ -338,9 +338,9 @@ class Concurrence(smach.container.Container):
                 self._states[label].get_registered_input_keys(),
                 self._states[label].get_registered_output_keys(),
                 self._remappings[label]))
-        except:
+        except Exception, e:
             self._user_code_exception = True
-            self._child_exceptions[label] = traceback.format_exc()
+            self._child_exceptions[label] = e
             with self._done_cond:
                 self._done_cond.notify_all()
             raise smach.InvalidStateError(("Could not execute child state '%s': " % label)+traceback.format_exc())
