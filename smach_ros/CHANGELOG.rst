@@ -2,6 +2,9 @@
 Changelog for package smach_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.0.2 (2019-03-14)
 ------------------
 * Merge pull request `#2 <https://github.com/mojin-robotics/executive_smach/issues/2>`_ from ipa-fxm/fix_string_format_exception
