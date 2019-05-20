@@ -2,8 +2,8 @@
 Changelog for package smach
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.3 (2019-05-20)
+------------------
 * Merge pull request `#9 <https://github.com/mojin-robotics/executive_smach/issues/9>`_ from LoyVanBeek/feature/concurrent_exceptions
   Feature/concurrent exceptions
 * Put the raw exception in a dict, not the formatted exception
