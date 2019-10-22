@@ -118,6 +118,10 @@ class StateMachine(smach.container.Container):
             raise smach.InvalidStateError(
             'Attempting to add state with label "'+label+'" to state machine, but this label is already being used.')
 
+        # Check member variables
+        if not state.member_variables_checked:
+            state.check_member_variables()
+
         # Debug info
         smach.logdebug("Adding state '"+str(label)+"' to the state machine.")
 

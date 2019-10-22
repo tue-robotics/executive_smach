@@ -2,9 +2,162 @@
 import threading
 import traceback
 
+import ast
+import astor
+from copy import deepcopy
+import inspect
 import smach
 
 __all__ = ['State','CBState']
+
+
+class StateCodeTransformer(ast.NodeTransformer):
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def visit_Name(self, node):
+        if node.id == "self":
+            return ast.copy_location(ast.Attribute(attr="_state", value=node, ctx=ast.Load()), node)
+
+
+class StateCodeReverseTransformer(ast.NodeTransformer):
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def visit_Attribute(self, node):
+        if node.attr == "_state" and isinstance(node.value, ast.Name) and node.value.id == "self":
+            return node.value
+        else:
+            for field, old_value in ast.iter_fields(node):
+                old_value = getattr(node, field, None)
+                if isinstance(old_value, list):
+                    new_values = []
+                    for value in old_value:
+                        if isinstance(value, ast.AST):
+                            value = self.visit(value)
+                            if value is None:
+                                continue
+                            elif not isinstance(value, ast.AST):
+                                new_values.extend(value)
+                                continue
+                        new_values.append(value)
+                    old_value[:] = new_values
+                elif isinstance(old_value, ast.AST):
+                    new_node = self.visit(old_value)
+                    if new_node is None:
+                        delattr(node, field)
+                    else:
+                        setattr(node, field, new_node)
+            return node
+
+
+class RobotAttrAnalyser(ast.NodeVisitor):
+    def __init__(self, state, filename, line_offset):
+        self._state = state
+        self._filename = filename
+        self._line_offset = line_offset
+        self._lines = []
+
+        self._recent_lineno = None
+        self._recent_col_offset = None
+
+    def compile(self):
+        exceptions = []
+        for line in self._lines:
+            obj = compile(ast.fix_missing_locations(ast.Module(body=[line["expr"]])), filename=self._filename,
+                          mode="exec")
+            try:
+                exec obj
+            except Exception as e:
+                exceptions.append(e)
+
+        if exceptions:
+            msg = "\nIncorrect call(s):"
+            msg += "\n".join(map(str, exceptions))
+            raise AssertionError(msg)
+
+    def reset(self):
+        self._lines = []
+
+    def _add_expr(self, expr):
+        self._lines.append({"expr": expr, "lineno": self._recent_lineno,
+                            "col_offset": self._recent_col_offset})
+
+    def _file_line_error(self):
+        return '\n  File "{0}", line {1}\n\t'.format(self._filename, self._recent_lineno, "blaat")
+
+    def _visit_item(self, node):
+        if isinstance(node, ast.AST):
+            old_lineno = self._recent_lineno
+            old_col_offset = self._recent_col_offset
+            if isinstance(node, ast.stmt):
+                self._recent_lineno = node.lineno + self._line_offset
+                self._recent_col_offset = node.col_offset
+            output = self.visit(node)
+            self._recent_lineno = old_lineno
+            self._recent_col_offset = old_col_offset
+            return output
+
+    def generic_visit(self, node):
+        for field, value in ast.iter_fields(node):
+            if isinstance(value, list):
+                outputs = []
+                for item in value:
+                    outputs.append(self._visit_item(item))
+                return any(outputs)
+            # else
+            return self._visit_item(value)
+
+    # noinspection PyPep8Naming
+    def visit_Attribute(self, node):
+        expr = ast.Assert(test=ast.Call(func=ast.Name(id='hasattr', ctx=ast.Load()),
+                                        args=[node.value, ast.Str(s=node.attr)], keywords=[],
+                                        starargs=None, kwargs=None),
+                          msg=ast.Str(s="{}'{}' has no attribute '{}'".format(
+                              self._file_line_error(),
+                              astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node.value))).strip(),
+                              node.attr)))
+
+        for field, value in ast.iter_fields(node):
+            if isinstance(value, list):
+                outputs = []
+                for item in value:
+                    outputs.append(self._visit_item(item))
+                output = any(outputs)
+                if output:
+                    self._add_expr(expr)
+                return output
+            # else
+            output = self._visit_item(value)
+            if output:
+                self._add_expr(expr)
+            return output
+
+    # noinspection PyPep8Naming
+    def visit_Call(self, node):
+        expr = ast.Assert(test=ast.Compare(left=ast.Call(func=ast.Name(id="callable", ctx=ast.Load()),
+                                                         args=[node.func], keywords=[]),
+                                           ops=[ast.Eq()], comparators=[ast.Name(id="True", ctx=ast.Load())]),
+                          msg=ast.Str(s="{}'{}' object is not callable".format(
+                              self._file_line_error(),
+                              astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node))).strip())))
+
+        for field, value in ast.iter_fields(node):
+            if isinstance(value, list):
+                outputs = []
+                for item in value:
+                    outputs.append(self._visit_item(item))
+                output = any(outputs)
+                if output:
+                    self._add_expr(expr)
+                return output
+            # else
+            output = self._visit_item(value)
+            if output:
+                self._add_expr(expr)
+            return output
+
+    # noinspection PyPep8Naming
+    @staticmethod
+    def visit_Name(node):
+        return node.id == "self"
+
 
 class State(object):
     """Base class for SMACH states.
@@ -15,6 +168,25 @@ class State(object):
     declared before the state goes active (when its C{execute()} method is
     called) and are checked during construction.
     """
+    _member_variables_checked = False
+
+    @property
+    def member_variables_checked(self):
+        return self._member_variables_checked
+
+    def check_member_variables(self):
+        filename = inspect.getsourcefile(self.execute)
+        execute_code, line_offset = inspect.getsourcelines(self.execute)
+        execute_contents_only = "\n".join(map(str.strip, execute_code[1:]))
+
+        tree = ast.parse(execute_contents_only)
+        tree = StateCodeTransformer().visit(tree)
+        visitor = RobotAttrAnalyser(self, filename, line_offset)
+        visitor.visit(tree)
+        visitor.compile()
+
+        self._member_variables_checked = True
+
     def __init__(self, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
         """State constructor
         @type outcomes: list of str
