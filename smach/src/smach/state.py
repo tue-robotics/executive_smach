@@ -1,10 +1,7 @@
-
-import threading
-import traceback
-
 import smach
 
-__all__ = ['State','CBState']
+__all__ = ['State', 'CBState']
+
 
 class State(object):
     """Base class for SMACH states.
@@ -15,7 +12,7 @@ class State(object):
     declared before the state goes active (when its C{execute()} method is
     called) and are checked during construction.
     """
-    def __init__(self, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
+    def __init__(self, outcomes=None, input_keys=None, output_keys=None, io_keys=None):
         """State constructor
         @type outcomes: list of str
         @param outcomes: Custom outcomes for this state.
@@ -32,6 +29,15 @@ class State(object):
         @param io_keys: The userdata keys to which this state might write or
         from which it might read at runtime.
         """
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if io_keys is None:
+            io_keys = []
+
         # Store outcomes
         self._outcomes = set(outcomes)
 
@@ -44,7 +50,7 @@ class State(object):
         self._shutdown_requested = False
         smach.handle_shutdown(self.request_shutdown)
 
-    ### Meat
+    # Meat
     def execute(self, ud):
         """Called when executing a state.
         In the base class this raises a NotImplementedError.
@@ -54,7 +60,7 @@ class State(object):
         """
         raise NotImplementedError()
 
-    ### SMACH Interface API
+    # SMACH Interface API
     def register_outcomes(self, new_outcomes):
         """Add outcomes to the outcome set."""
         self._outcomes = self._outcomes.union(new_outcomes)
@@ -66,7 +72,7 @@ class State(object):
         """
         return tuple(self._outcomes)
 
-    ### Userdata API
+    # Userdata API
     def register_io_keys(self, keys):
         """Add keys to the set of keys from which this state may read and write.
         @type keys: list of str
@@ -100,7 +106,7 @@ class State(object):
         """Get a tuple of registered output keys."""
         return tuple(self._output_keys)
 
-    ### Preemption interface
+    # Preemption interface
     def request_preempt(self):
         """Sets preempt_requested to True"""
         self._preempt_requested = True
@@ -122,8 +128,10 @@ class State(object):
         self._shutdown_requested = True
         self.request_preempt()
 
+
 class CBState(State):
-    def __init__(self, cb, cb_args=[], cb_kwargs={}, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
+    def __init__(self, cb, cb_args=None, cb_kwargs=None, outcomes=None, input_keys=None, output_keys=None,
+                 io_keys=None):
         """Create s state from a single function.
 
         @type outcomes: list of str
@@ -141,6 +149,18 @@ class CBState(State):
         @param io_keys: The userdata keys to which this state might write or
         from which it might read at runtime.
         """
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if io_keys is None:
+            io_keys = []
+        if cb_args is None:
+            cb_args = []
+        if cb_kwargs is None:
+            cb_kwargs = {}
         State.__init__(self, outcomes, input_keys, output_keys, io_keys)
         self._cb = cb
         self._cb_args = cb_args
