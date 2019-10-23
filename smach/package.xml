@@ -17,7 +17,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>python-astor</run_depend>
+  <run_depend>python-astor-pip</run_depend>
 
   <export>
     <rosdoc config="rosdoc.yaml"/>    
