@@ -47,7 +47,7 @@ class StateCodeReverseTransformer(ast.NodeTransformer):
             return node
 
 
-class RobotAttrAnalyser(ast.NodeVisitor):
+class StateAttributeAnalyser(ast.NodeVisitor):
     def __init__(self, state, filename, line_offset):
         self._state = state
         self._filename = filename
@@ -82,6 +82,10 @@ class RobotAttrAnalyser(ast.NodeVisitor):
     def _file_line_error(self):
         return '\n  File "{0}", line {1}\n\t'.format(self._filename, self._recent_lineno, "blaat")
 
+    @staticmethod
+    def _ast_unparse(node):
+        return astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node))).strip()
+
     def _visit_item(self, node):
         if isinstance(node, ast.AST):
             old_lineno = self._recent_lineno
@@ -111,7 +115,7 @@ class RobotAttrAnalyser(ast.NodeVisitor):
                                         starargs=None, kwargs=None),
                           msg=ast.Str(s="{}'{}' has no attribute '{}'".format(
                               self._file_line_error(),
-                              astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node.value))).strip(),
+                              self._ast_unparse(node.value),
                               node.attr)))
 
         for field, value in ast.iter_fields(node):
@@ -136,7 +140,7 @@ class RobotAttrAnalyser(ast.NodeVisitor):
                                            ops=[ast.Eq()], comparators=[ast.Name(id="True", ctx=ast.Load())]),
                           msg=ast.Str(s="{}'{}' object is not callable".format(
                               self._file_line_error(),
-                              astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node))).strip())))
+                              self._ast_unparse(node))))
 
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):
@@ -181,9 +185,9 @@ class State(object):
 
         tree = ast.parse(execute_contents_only)
         tree = StateCodeTransformer().visit(tree)
-        visitor = RobotAttrAnalyser(self, filename, line_offset)
-        visitor.visit(tree)
-        visitor.compile()
+        analyser = StateAttributeAnalyser(self, filename, line_offset)
+        analyser.visit(tree)
+        analyser.compile()
 
         self._member_variables_checked = True
 
