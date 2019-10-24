@@ -11,6 +11,58 @@ import smach
 __all__ = ['State','CBState']
 
 
+# Whitespace functions
+def add_spaces(s, numAdd):
+    # type: (str, int) -> str
+    """
+    Add leading spaces to (multi-line) string
+    :param s: string
+    :param numAdd: number of spaces to add
+    :return: string with added spaces
+    """
+    white = " "*numAdd
+    return white + white.join(s.splitlines(1))
+
+
+def del_spaces(s, num_del):
+    # type: (str, int) -> str
+    """
+    Delete 'num_del' leading spaces from (multi-line) string
+    Empty lines are ignore
+    If a line contains less leading spaces than to be removed a ValueError is raised
+    :param s: string to strip from leading spaces
+    :param num_del: number of spaces to delete
+    :return: string stripped from leading spaces
+    """
+    def aux(line, num_del=num_del, white=" "*num_del):
+        print("line:\n\t{}\n{}".format(line, len(line)))
+        if line != "\n" and line[:num_del] != white:
+            raise ValueError, "removing more spaces than there are!"
+        return line[num_del:] if line != "\n" else line
+    return ''.join(map(aux, s.splitlines(1)))
+
+
+def num_spaces(s):
+    # type: (str) -> [int]
+    """
+    Get the number of leading spaces per line of a (multi-line) string
+    :param s: string
+    :return: number of leading spaces per line
+    """
+    return [len(line)-len(line.lstrip()) for line in s.splitlines(0)]
+
+
+def unindent_block(s):
+    # type: (str) -> str
+    """
+    Remove the maximum number of leading spaces of a (multi-line) string, so that the line with the least number of
+    leading spaces, is stripped from all leading spaces
+    :param s: string
+    :return: stripped string
+    """
+    return del_spaces(s, min([x for x in num_spaces(s) if x > 0]))
+
+
 class StateCodeTransformer(ast.NodeTransformer):
     # noinspection PyPep8Naming,PyMethodMayBeStatic
     def visit_Name(self, node):
