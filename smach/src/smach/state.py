@@ -255,9 +255,9 @@ class State(object):
     def check_member_variables(self):
         filename = inspect.getsourcefile(self.execute)
         execute_code, line_offset = inspect.getsourcelines(self.execute)
-        execute_contents_only = "\n".join(map(str.strip, execute_code[1:]))
+        execute_contents_only = "\n".join(map(str.rstrip, execute_code[1:]))
 
-        tree = ast.parse(execute_contents_only)
+        tree = ast.parse(unindent_block(execute_contents_only))
         tree = StateCodeTransformer().visit(tree)
         analyser = StateAttributeAnalyser(self, filename, line_offset)
         analyser.visit(tree)
