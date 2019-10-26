@@ -35,7 +35,6 @@ def del_spaces(s, num_del):
     :return: string stripped from leading spaces
     """
     def aux(line, num_del=num_del, white=" "*num_del):
-        print("line:\n\t{}\n{}".format(line, len(line)))
         if line != "\n" and line[:num_del] != white:
             raise ValueError, "removing more spaces than there are!"
         return line[num_del:] if line != "\n" else line
