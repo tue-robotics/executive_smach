@@ -72,27 +72,7 @@ class StateCodeTransformer(ast.NodeTransformer):
         if node.id == "self":
             return ast.copy_location(ast.Attribute(attr="_state", value=node, ctx=ast.Load()), node)
         else:
-            for field, old_value in ast.iter_fields(node):
-                old_value = getattr(node, field, None)
-                if isinstance(old_value, list):
-                    new_values = []
-                    for value in old_value:
-                        if isinstance(value, ast.AST):
-                            value = self.visit(value)
-                            if value is None:
-                                continue
-                            elif not isinstance(value, ast.AST):
-                                new_values.extend(value)
-                                continue
-                        new_values.append(value)
-                    old_value[:] = new_values
-                elif isinstance(old_value, ast.AST):
-                    new_node = self.visit(old_value)
-                    if new_node is None:
-                        delattr(node, field)
-                    else:
-                        setattr(node, field, new_node)
-            return node
+            return self.generic_visit(node)
 
 
 class StateCodeReverseTransformer(ast.NodeTransformer):
@@ -101,27 +81,7 @@ class StateCodeReverseTransformer(ast.NodeTransformer):
         if node.attr == "_state" and isinstance(node.value, ast.Name) and node.value.id == "self":
             return node.value
         else:
-            for field, old_value in ast.iter_fields(node):
-                old_value = getattr(node, field, None)
-                if isinstance(old_value, list):
-                    new_values = []
-                    for value in old_value:
-                        if isinstance(value, ast.AST):
-                            value = self.visit(value)
-                            if value is None:
-                                continue
-                            elif not isinstance(value, ast.AST):
-                                new_values.extend(value)
-                                continue
-                        new_values.append(value)
-                    old_value[:] = new_values
-                elif isinstance(old_value, ast.AST):
-                    new_node = self.visit(old_value)
-                    if new_node is None:
-                        delattr(node, field)
-                    else:
-                        setattr(node, field, new_node)
-            return node
+            return self.generic_visit(node)
 
 
 class StateAttributeAnalyser(ast.NodeVisitor):
