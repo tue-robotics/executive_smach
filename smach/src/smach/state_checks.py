@@ -141,7 +141,7 @@ class StateAttributeAnalyser(ast.NodeVisitor):
         self._lines = []
 
     def _add_expr(self, expr):
-        # type: (ast.expr) -> None
+        # type: (ast.stmt) -> None
         """
         Add expr to be evaluated at the end. Include line number and column offset for possible logging.
 
