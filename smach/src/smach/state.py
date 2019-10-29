@@ -16,6 +16,7 @@ def add_spaces(s, numAdd):
     # type: (str, int) -> str
     """
     Add leading spaces to (multi-line) string
+
     :param s: string
     :param numAdd: number of spaces to add
     :return: string with added spaces
@@ -30,6 +31,7 @@ def del_spaces(s, num_del):
     Delete 'num_del' leading spaces from (multi-line) string
     Empty lines are ignore
     If a line contains less leading spaces than to be removed a ValueError is raised
+
     :param s: string to strip from leading spaces
     :param num_del: number of spaces to delete
     :return: string stripped from leading spaces
@@ -45,6 +47,7 @@ def num_spaces(s):
     # type: (str) -> [int]
     """
     Get the number of leading spaces per line of a (multi-line) string
+
     :param s: string
     :return: number of leading spaces per line
     """
@@ -56,6 +59,7 @@ def unindent_block(s):
     """
     Remove the maximum number of leading spaces of a (multi-line) string, so that the line with the least number of
     leading spaces, is stripped from all leading spaces
+
     :param s: string
     :return: stripped string
     """
