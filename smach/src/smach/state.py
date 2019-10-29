@@ -2,10 +2,8 @@
 import threading
 import traceback
 
-import ast
-import inspect
 import smach
-from smach.state_checks import StateAttributeAnalyser, StateCodeTransformer, unindent_block
+from smach.state_checks import StateAttributeAnalyser
 
 __all__ = ['State','CBState']
 
@@ -26,15 +24,8 @@ class State(object):
         return self._member_variables_checked
 
     def check_member_variables(self):
-        filename = inspect.getsourcefile(self.execute)
-        execute_code, line_offset = inspect.getsourcelines(self.execute)
-        execute_contents_only = "\n".join(map(str.rstrip, execute_code[1:]))
-
-        tree = ast.parse(unindent_block(execute_contents_only))
-        tree = StateCodeTransformer().visit(tree)
-        analyser = StateAttributeAnalyser(self, filename, line_offset)
-        analyser.visit(tree)
-        analyser.compile()
+        analyser = StateAttributeAnalyser(self)
+        analyser.analyse()
 
         self._member_variables_checked = True
 

@@ -1,6 +1,7 @@
 import ast
 import astor
 from copy import deepcopy
+import inspect
 
 
 # Whitespace functions
@@ -14,7 +15,7 @@ def add_spaces(s, num_add):
     :return: string with added spaces
     """
     white = " "*num_add
-    return white + white.join(s.splitlines(1))
+    return white + white.join(s.splitlines(True))
 
 
 def del_spaces(s, num_del):
@@ -32,7 +33,7 @@ def del_spaces(s, num_del):
         if line != "\n" and line[:num_del] != white:
             raise ValueError("removing more spaces than there are!")
         return line[num_del:] if line != "\n" else line
-    return ''.join(map(aux, s.splitlines(1)))
+    return ''.join(map(aux, s.splitlines(True)))
 
 
 def num_spaces(s):
@@ -43,7 +44,7 @@ def num_spaces(s):
     :param s: string
     :return: number of leading spaces per line
     """
-    return [len(line)-len(line.lstrip()) for line in s.splitlines(0)]
+    return [len(line)-len(line.lstrip()) for line in s.splitlines(False)]
 
 
 def unindent_block(s):
@@ -59,8 +60,12 @@ def unindent_block(s):
 
 
 class StateCodeTransformer(ast.NodeTransformer):
+    """
+    Convert code of a state to be part of the StateAttributeAnalyser by replacing "self" by "self._state"
+    """
     # noinspection PyPep8Naming,PyMethodMayBeStatic
     def visit_Name(self, node):
+        # type: (ast.AST) -> ast.AST
         if node.id == "self":
             return ast.copy_location(ast.Attribute(attr="_state", value=node, ctx=ast.Load()), node)
         else:
@@ -68,8 +73,12 @@ class StateCodeTransformer(ast.NodeTransformer):
 
 
 class StateCodeReverseTransformer(ast.NodeTransformer):
+    """
+    Convert code of the StateAttributeAnalyser back to original state code by replacing "self._state" by "self"
+    """
     # noinspection PyPep8Naming,PyMethodMayBeStatic
     def visit_Attribute(self, node):
+        # type: (ast.AST) -> ast.AST
         if node.attr == "_state" and isinstance(node.value, ast.Name) and node.value.id == "self":
             return node.value
         else:
@@ -77,16 +86,39 @@ class StateCodeReverseTransformer(ast.NodeTransformer):
 
 
 class StateAttributeAnalyser(ast.NodeVisitor):
-    def __init__(self, state, filename, line_offset):
+    """
+    Analyse members and functions of state variables
+    """
+    def __init__(self, state):
+        """
+        Constructor
+
+        :param state: state to be analysed
+        """
         self._state = state
-        self._filename = filename
-        self._line_offset = line_offset
         self._lines = []
 
         self._recent_lineno = None
         self._recent_col_offset = None
 
-    def compile(self):
+        filename = inspect.getsourcefile(self._state.execute)
+        execute_code, line_offset = inspect.getsourcelines(self._state.execute)
+
+        self._filename = filename
+        self._line_offset = line_offset
+
+        execute_contents_only = "\n".join(map(str.rstrip, execute_code[1:]))
+        tree = ast.parse(unindent_block(execute_contents_only))
+        self._tree = StateCodeTransformer().visit(tree)
+
+    def analyse(self):
+        """
+        Analyse the code of self._tree if is compatible with the current self._state and its functions and members.
+        """
+        self.visit(self._tree)
+        self._compile()
+
+    def _compile(self):
         exceptions = []
         for line in self._lines:
             obj = compile(ast.fix_missing_locations(ast.Module(body=[line["expr"]])), filename=self._filename,
@@ -102,20 +134,44 @@ class StateAttributeAnalyser(ast.NodeVisitor):
             raise AssertionError(msg)
 
     def reset(self):
+        """
+        Clear stored expressions to be evaluated.
+        :return:
+        """
         self._lines = []
 
     def _add_expr(self, expr):
+        # type: (ast.expr) -> None
+        """
+        Add expr to be evaluated at the end. Include line number and column offset for possible logging.
+
+        :param expr: (ast.expr) expression
+        """
         self._lines.append({"expr": expr, "lineno": self._recent_lineno,
                             "col_offset": self._recent_col_offset})
 
     def _file_line_error(self):
-        return '\n  File "{0}", line {1}\n\t'.format(self._filename, self._recent_lineno, "blaat")
+        # type: () -> str
+        """
+        Generate a message with the filename and current line.
+
+        :return: message
+        """
+        return '\n  File "{0}", line {1}\n\t'.format(self._filename, self._recent_lineno)
 
     @staticmethod
     def _ast_unparse(node):
+        # type: (ast.AST) -> str
+        """
+        Convert ast code back to plain code
+
+        :param node: (ast.AST)
+        :return: (str) plain code
+        """
         return astor.to_source(StateCodeReverseTransformer().visit(deepcopy(node))).strip()
 
     def _visit_item(self, node):
+        # type: (ast.AST) -> bool
         if isinstance(node, ast.AST):
             old_lineno = self._recent_lineno
             old_col_offset = self._recent_col_offset
@@ -128,6 +184,7 @@ class StateAttributeAnalyser(ast.NodeVisitor):
             return output
 
     def generic_visit(self, node):
+        # type: (ast.AST) -> bool
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):
                 outputs = []
@@ -139,6 +196,7 @@ class StateAttributeAnalyser(ast.NodeVisitor):
 
     # noinspection PyPep8Naming
     def visit_Attribute(self, node):
+        # type: (ast.Attribute) -> bool
         expr = ast.Assert(test=ast.Call(func=ast.Name(id='hasattr', ctx=ast.Load()),
                                         args=[node.value, ast.Str(s=node.attr)], keywords=[],
                                         starargs=None, kwargs=None),
@@ -164,6 +222,7 @@ class StateAttributeAnalyser(ast.NodeVisitor):
 
     # noinspection PyPep8Naming
     def visit_Call(self, node):
+        # type: (ast.Call) -> bool
         expr = ast.Assert(test=ast.Compare(left=ast.Call(func=ast.Name(id="callable", ctx=ast.Load()),
                                                          args=[node.func], keywords=[]),
                                            ops=[ast.Eq()], comparators=[ast.Name(id="True", ctx=ast.Load())]),
@@ -189,4 +248,5 @@ class StateAttributeAnalyser(ast.NodeVisitor):
     # noinspection PyPep8Naming
     @staticmethod
     def visit_Name(node):
+        # type: (ast.Name) -> bool
         return node.id == "self"
