@@ -12,16 +12,16 @@ __all__ = ['State','CBState']
 
 
 # Whitespace functions
-def add_spaces(s, numAdd):
+def add_spaces(s, num_add):
     # type: (str, int) -> str
     """
     Add leading spaces to (multi-line) string
 
     :param s: string
-    :param numAdd: number of spaces to add
+    :param num_add: number of spaces to add
     :return: string with added spaces
     """
-    white = " "*numAdd
+    white = " "*num_add
     return white + white.join(s.splitlines(1))
 
 
