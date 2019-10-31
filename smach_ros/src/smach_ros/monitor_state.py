@@ -50,10 +50,10 @@ class MonitorState(smach.State):
         self._n_checks = 0
         self._trigger_event.clear()
 
-        self._sub = rospy.Subscriber(self._topic, self._msg_type, self._cb, callback_args=ud)
+        sub = rospy.Subscriber(self._topic, self._msg_type, self._cb, callback_args=ud)
 
         self._trigger_event.wait()
-        self._sub.unregister()
+        sub.unregister()
 
         if self.preempt_requested():
             self.service_preempt()
