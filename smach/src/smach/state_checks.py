@@ -30,9 +30,10 @@ def del_spaces(s, num_del):
     :return: string stripped from leading spaces
     """
     def aux(line, num_del=num_del, white=" "*num_del):
-        if line != "\n" and line[:num_del] != white:
+        # type: (str, int, str) -> [str]
+        if line.strip() and line[:num_del] != white:
             raise ValueError("removing more spaces than there are!")
-        return line[num_del:] if line != "\n" else line
+        return line[num_del:] if line.strip() else line
     return ''.join(map(aux, s.splitlines(True)))
 
 
@@ -51,12 +52,14 @@ def unindent_block(s):
     # type: (str) -> str
     """
     Remove the maximum number of leading spaces of a (multi-line) string, so that the line with the least number of
-    leading spaces, is stripped from all leading spaces
+    leading spaces, is stripped from all leading spaces. No tabs allowed
 
     :param s: string
     :return: stripped string
     """
-    return del_spaces(s, min([x for x in num_spaces(s) if x > 0]))
+    if "\t" in s:
+        raise ValueError("No tabs allowed: {}".format(repr(s)))
+    return del_spaces(s, min(num_spaces("\n".join([l for l in s.splitlines() if l]))))
 
 
 class StateCodeTransformer(ast.NodeTransformer):
