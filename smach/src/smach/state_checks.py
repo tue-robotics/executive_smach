@@ -111,7 +111,7 @@ class StateAttributeAnalyser(ast.NodeVisitor):
         self._line_offset = line_offset
 
         execute_contents_only = "\n".join(map(str.rstrip, execute_code[1:]))
-        tree = ast.parse(unindent_block(execute_contents_only))
+        tree = ast.parse(unindent_block(execute_contents_only.expandtabs(4)))
         self._tree = StateCodeTransformer().visit(tree)
 
     def analyse(self):
