@@ -42,7 +42,7 @@ def del_spaces(s, num_del):
 def num_spaces(s):
     # type: (str) -> [int]
     """
-    Get the number of leading spaces per line of a (multi-line) string
+    Get the number of leading spaces per line of a (multi-line) string, tabs are counted as one
 
     :param s: string
     :return: number of leading spaces per line
