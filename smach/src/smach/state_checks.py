@@ -22,7 +22,7 @@ def del_spaces(s, num_del):
     # type: (str, int) -> str
     """
     Delete 'num_del' leading spaces from (multi-line) string
-    Empty lines are ignore
+    Empty lines and lines with only whitespace are ignored
     If a line contains less leading spaces than to be removed a ValueError is raised
 
     :param s: string to strip from leading spaces
@@ -31,6 +31,8 @@ def del_spaces(s, num_del):
     """
     def aux(line, num_del=num_del, white=" "*num_del):
         # type: (str, int, str) -> [str]
+        if line.strip() and "\t" in line:
+            raise ValueError("No tabs allowed in lines with not only whitespace: {}".format(repr(s)))
         if line.strip() and line[:num_del] != white:
             raise ValueError("removing more spaces than there are!")
         return line[num_del:] if line.strip() else line
