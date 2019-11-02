@@ -95,6 +95,12 @@ class TestUnindentBlock(unittest.TestCase):
         for string1, string2 in zip(["two", "", "", "", "  four"], s2.splitlines(False)):
             self.assertEqual(string1, string2)
 
+    def test_unindent_block_raise(self):
+        strings = ["  two", "\ttab", "\t", "    four"]
+        s1 = "\n".join(strings)
+        with self.assertRaises(ValueError):
+            s2 = unindent_block(s1)
+
 
 class TestStateCodeTransformer(unittest.TestCase):
 
