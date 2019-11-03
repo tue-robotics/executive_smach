@@ -206,7 +206,7 @@ class TestStateAttributeAnalyser(unittest.TestCase):
         state = TestState1()
         state.check_member_variables()
 
-    def test_state_attribute_analyser_raise_attribute(self):
+    def test_state_attribute_analyser_raise_attribute1(self):
         """
         Test the code in the execute. As a new member variables is defined in the execute an Exception should be raised.
         """
@@ -227,14 +227,33 @@ class TestStateAttributeAnalyser(unittest.TestCase):
         with self.assertRaises(AssertionError):
             state.check_member_variables()
 
+    def test_state_attribute_analyser_raise_attribute2(self):
+        """
+        Test the code in the execute. As a non-existing member function is called in a 'if', which resolves to 'True',
+        an Exception should be raised.
+        """
+        class TestState3(State):
+            def __init__(self):
+                super(TestState3, self).__init__(outcomes=["done"])
+                self.string1 = "1"
+
+            def execute(self, ud=None):
+                self.string1 = ""
+                if True:
+                    self.string1.resolve()
+
+        state = TestState3()
+        with self.assertRaises(AssertionError):
+            state.check_member_variables()
+
     def test_state_attribute_analyser_raise_callable(self):
         """
         Test the code in the execute. As the member function is not defined, it isn't callable an Exception should be
         raised.
         """
-        class TestState3(State):
+        class TestState4(State):
             def __init__(self):
-                super(TestState3, self).__init__(outcomes=["done"])
+                super(TestState4, self).__init__(outcomes=["done"])
                 self.string1 = "1"
                 self.get_string1 = ""
 
@@ -242,7 +261,7 @@ class TestStateAttributeAnalyser(unittest.TestCase):
                 self.get_string1()
                 self.string1 = ""
 
-        state = TestState3()
+        state = TestState4()
         with self.assertRaises(AssertionError):
             state.check_member_variables()
 
