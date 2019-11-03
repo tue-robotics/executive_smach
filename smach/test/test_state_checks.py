@@ -197,6 +197,8 @@ class TestStateAttributeAnalyser(unittest.TestCase):
             def execute(self, ud=None):
                 self.get_string1()
                 self.string1 = ""
+                if hasattr(self.string1, "resolve"):
+                    self.string1.resolve()
 
             def get_string1(self):
                 return self.string1
