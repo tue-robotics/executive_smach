@@ -190,14 +190,17 @@ class StateAttributeAnalyser(ast.NodeVisitor):
 
     def generic_visit(self, node):
         # type: (ast.AST) -> bool
+        field_outputs = []
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):
                 outputs = []
                 for item in value:
                     outputs.append(self._visit_item(item))
-                return any(outputs)
+                field_outputs.append(any(outputs))
             # else
-            return self._visit_item(value)
+            field_outputs.append(self._visit_item(value))
+        field_output = any(field_outputs)
+        return field_output
 
     # noinspection PyPep8Naming
     def visit_Attribute(self, node):
@@ -210,20 +213,19 @@ class StateAttributeAnalyser(ast.NodeVisitor):
                               self._ast_unparse(node.value),
                               node.attr)))
 
+        field_outputs = []
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):
                 outputs = []
                 for item in value:
                     outputs.append(self._visit_item(item))
-                output = any(outputs)
-                if output:
-                    self._add_expr(expr)
-                return output
+                field_outputs.append(any(outputs))
             # else
-            output = self._visit_item(value)
-            if output:
-                self._add_expr(expr)
-            return output
+            field_outputs.append(self._visit_item(value))
+        field_output = any(field_outputs)
+        if field_output:
+            self._add_expr(expr)
+        return field_output
 
     # noinspection PyPep8Naming
     def visit_Call(self, node):
@@ -235,23 +237,24 @@ class StateAttributeAnalyser(ast.NodeVisitor):
                               self._file_line_error(),
                               self._ast_unparse(node))))
 
+        field_outputs = []
         for field, value in ast.iter_fields(node):
             if isinstance(value, list):
                 outputs = []
                 for item in value:
                     outputs.append(self._visit_item(item))
-                output = any(outputs)
-                if output:
-                    self._add_expr(expr)
-                return output
+                field_outputs.append(any(outputs))
             # else
-            output = self._visit_item(value)
-            if output:
-                self._add_expr(expr)
-            return output
+            field_outputs.append(self._visit_item(value))
+        field_output = any(field_outputs)
+        if field_output:
+            self._add_expr(expr)
+        return field_output
 
     # noinspection PyPep8Naming
-    @staticmethod
-    def visit_Name(node):
+    def visit_Name(self, node):
         # type: (ast.Name) -> bool
-        return node.id == "self"
+        if node.id == "self":
+            return True
+        else:
+            return self.generic_visit(node)
