@@ -119,8 +119,8 @@ class StateMachine(smach.container.Container):
             'Attempting to add state with label "'+label+'" to state machine, but this label is already being used.')
 
         # Check member variables
-        if not state.member_variables_checked:
-            state.check_member_variables()
+        assert(state.member_variables_checked, "Members of {label}({class}) have not been checked, did you call
+                                               "'check_member_variables'?".format(label, state.__class__.__name__))
 
         # Debug info
         smach.logdebug("Adding state '"+str(label)+"' to the state machine.")
