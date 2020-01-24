@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>smach</name>
   <version>2.0.4</version>
   <description>
@@ -17,9 +17,11 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>python-astor-pip</run_depend>
+  <exec_depend>python-astor-pip</exec_depend>
+
+  <doc_depend>epydoc</doc_depend>
 
   <export>
-    <rosdoc config="rosdoc.yaml"/>    
+    <rosdoc config="rosdoc.yaml"/>
   </export>
 </package>
