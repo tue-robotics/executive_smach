@@ -1,41 +1,39 @@
-
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
-import threading
 import traceback
 
 import smach
-from smach.state import *
 
 __all__ = ['ServiceState']
 
+
 class ServiceState(smach.State):
     """State for calling a service."""
-    def __init__(self,
-            # Service info
-            service_name,
-            service_spec,
-            # Request Policy
-            request = None,
-            request_cb = None,
-            request_cb_args = [],
-            request_cb_kwargs = {},
-            request_key = None,
-            request_slots = [],
-            # Response Policy
-            response_cb = None,
-            response_cb_args = [],
-            response_cb_kwargs = {},
-            response_key = None,
-            response_slots = [],
-            # Keys
-            input_keys = [],
-            output_keys = [],
-            outcomes = [],
-            ):
 
-        smach.State.__init__(self,outcomes=['succeeded','aborted','preempted'])
+    def __init__(self,
+                 # Service info
+                 service_name,
+                 service_spec,
+                 # Request Policy
+                 request=None,
+                 request_cb=None,
+                 request_cb_args=[],
+                 request_cb_kwargs={},
+                 request_key=None,
+                 request_slots=[],
+                 # Response Policy
+                 response_cb=None,
+                 response_cb_args=[],
+                 response_cb_kwargs={},
+                 response_key=None,
+                 response_slots=[],
+                 # Keys
+                 input_keys=[],
+                 output_keys=[],
+                 outcomes=[],
+                 ):
+
+        smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'])
 
         # Store Service info
         self._service_name = service_name
@@ -49,7 +47,6 @@ class ServiceState(smach.State):
         else:
             self._request = request
 
-        
         if request_cb is not None and not hasattr(request_cb, '__call__'):
             raise smach.InvalidStateError("Request callback object given to ServiceState that IS NOT a function object")
 
@@ -75,7 +72,8 @@ class ServiceState(smach.State):
 
         # Store response policy
         if response_cb is not None and not hasattr(response_cb, '__call__'):
-            raise smach.InvalidStateError("Response callback object given to ServiceState that IS NOT a function object")
+            raise smach.InvalidStateError(
+                "Response callback object given to ServiceState that IS NOT a function object")
 
         self._response_cb = response_cb
         self._response_cb_args = response_cb_args
@@ -124,7 +122,7 @@ class ServiceState(smach.State):
                     rospy.loginfo("Shutting down while waiting for service '%s'." % self._service_name)
                     return 'aborted'
                 try:
-                    rospy.wait_for_service(self._service_name,1.0)
+                    rospy.wait_for_service(self._service_name, 1.0)
                     self._proxy = rospy.ServiceProxy(self._service_name, self._service_spec)
                     rospy.logdebug("Connected to service '%s'" % self._service_name)
                 except rospy.ROSException as ex:
@@ -138,37 +136,39 @@ class ServiceState(smach.State):
             if self._request_key in ud:
                 self._request = ud[self._request_key]
             else:
-                rospy.logerr("Requested request key '%s' not in userdata struture. Available keys are: %s" % (self._request_key, str(list(ud.keys()))))
+                rospy.logerr("Requested request key '%s' not in userdata struture. Available keys are: %s" % (
+                self._request_key, str(list(ud.keys()))))
                 return 'aborted'
 
         # Write request fields from userdata if set
         for key in self._request_slots:
             if key in ud:
-                setattr(self._request,key,ud[key])
+                setattr(self._request, key, ud[key])
             else:
-                rospy.logerr("Requested request slot key '%s' is not in userdata strcture. Available keys are: %s" % (key, str(list(ud.keys()))))
+                rospy.logerr("Requested request slot key '%s' is not in userdata strcture. Available keys are: %s" % (
+                key, str(list(ud.keys()))))
                 return 'aborted'
 
         # Call user-supplied callback, if set, to get a request
         if self._request_cb is not None:
             try:
                 request_update = self._request_cb(
-                        smach.Remapper(
-                                ud,
-                                self._request_cb_input_keys,
-                                self._request_cb_output_keys,
-                                []),
-                        self._request,
-                        *self._request_cb_args,
-                        **self._request_cb_kwargs)
+                    smach.Remapper(
+                        ud,
+                        self._request_cb_input_keys,
+                        self._request_cb_output_keys,
+                        []),
+                    self._request,
+                    *self._request_cb_args,
+                    **self._request_cb_kwargs)
                 if request_update is not None:
                     self._request = request_update
             except:
-                rospy.logerr("Could not execute request callback: "+traceback.format_exc())
+                rospy.logerr("Could not execute request callback: " + traceback.format_exc())
                 return 'aborted'
 
         if self._request is None:
-            rospy.logerr("Attempting to call service "+self._service_name+" with no request")
+            rospy.logerr("Attempting to call service " + self._service_name + " with no request")
             return 'aborted'
 
         # Call service
@@ -185,26 +185,29 @@ class ServiceState(smach.State):
         if self._response_cb is not None:
             try:
                 response_cb_outcome = self._response_cb(
-                        smach.Remapper(
-                                ud,
-                                self._response_cb_input_keys,
-                                self._response_cb_output_keys,
-                                []),
-                        self._response,
-                        *self._response_cb_args,
-                        **self._response_cb_kwargs)
+                    smach.Remapper(
+                        ud,
+                        self._response_cb_input_keys,
+                        self._response_cb_output_keys,
+                        []),
+                    self._response,
+                    *self._response_cb_args,
+                    **self._response_cb_kwargs)
                 if response_cb_outcome is not None and response_cb_outcome not in self.get_registered_outcomes():
-                    rospy.logerr("Result callback for service "+self._service_name+", "+str(self._response_cb)+" was not registered with the response_cb_outcomes argument. The response callback returned '"+str(response_cb_outcome)+"' but the only registered outcomes are: "+str(self.get_registered_outcomes()))
+                    rospy.logerr("Result callback for service " + self._service_name + ", " + str(
+                        self._response_cb) + " was not registered with the response_cb_outcomes argument. The response callback returned '" + str(
+                        response_cb_outcome) + "' but the only registered outcomes are: " + str(
+                        self.get_registered_outcomes()))
                     return 'aborted'
             except:
-                rospy.logerr("Could not execute response callback: "+traceback.format_exc())
+                rospy.logerr("Could not execute response callback: " + traceback.format_exc())
                 return 'aborted'
 
         if self._response_key is not None:
             ud[self._response_key] = self._response
 
         for key in self._response_slots:
-            ud[key] = getattr(self._response,key)
+            ud[key] = getattr(self._response, key)
 
         if response_cb_outcome is not None:
             return response_cb_outcome

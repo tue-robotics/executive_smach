@@ -1,11 +1,9 @@
-
-import threading
 import traceback
-from contextlib import contextmanager
 
 import smach
 
 __all__ = ['Iterator']
+
 
 class Iterator(smach.container.Container):
     """Sequence Container
@@ -163,13 +161,11 @@ class Iterator(smach.container.Container):
             except:
                 raise smach.InvalidUserCodeError("Could not execute iterator state '%s' of type '%s': " % ( self._state_label, self._state) + traceback.format_exc())
 
-
-
             # Check if we should stop preemptively
             if self.preempt_requested():
                 self.service_preempt()
                 outcome = 'preempted'
-                break;
+                break
             if outcome in self._break_outcomes\
                     or (len(self._loop_outcomes) > 0 and outcome not in self._loop_outcomes):
                 break

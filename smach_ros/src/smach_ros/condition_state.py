@@ -1,13 +1,11 @@
-
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
-import threading
 import traceback
 
 import smach
 
 __all__ = ['ConditionState']
+
 
 class ConditionState(smach.State):
     """A state that will check a condition function a number of times.
@@ -15,17 +13,19 @@ class ConditionState(smach.State):
     If max_checks > 1, it will block while the condition is false and once it
     has checked max_checks times, it will return false.
     """
+
     def __init__(self,
-            cond_cb,
-            input_keys = [],
-            output_keys = [],
-            poll_rate = rospy.Duration(0.05),
-            timeout = None,
-            max_checks = 1):
-        smach.State.__init__(self,outcomes = ['true', 'false','preempted'], input_keys = input_keys, output_keys = output_keys)
+                 cond_cb,
+                 input_keys=[],
+                 output_keys=[],
+                 poll_rate=rospy.Duration(0.05),
+                 timeout=None,
+                 max_checks=1):
+        smach.State.__init__(self, outcomes=['true', 'false', 'preempted'], input_keys=input_keys,
+                             output_keys=output_keys)
 
         self._cond_cb = cond_cb
-        if hasattr(cond_cb,'get_registered_input_keys') and hasattr(cond_cb,'get_registered_output_keys'):
+        if hasattr(cond_cb, 'get_registered_input_keys') and hasattr(cond_cb, 'get_registered_output_keys'):
             self._cond_cb_input_keys = cond_cb.get_registered_input_keys()
             self._cond_cb_output_keys = cond_cb.get_registered_output_keys()
             self.register_input_keys(self._cond_cb_input_keys)
@@ -47,14 +47,15 @@ class ConditionState(smach.State):
             if self.preempt_requested():
                 self.service_preempt()
                 outcome = 'preempted'
-                break;
+                break
             # Call the condition
             try:
                 if self._cond_cb(ud):
                     outcome = 'true'
-                    break;
+                    break
             except:
-                raise smach.InvalidUserCodeError("Error thrown while executing condition callback %s: " % str(self._cond_cb) +traceback.format_exc())
+                raise smach.InvalidUserCodeError("Error thrown while executing condition callback %s: " % str(
+                    self._cond_cb) + traceback.format_exc())
             n_checks += 1
             rospy.sleep(self._poll_rate)
 

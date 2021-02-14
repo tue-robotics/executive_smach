@@ -1,10 +1,7 @@
-
-import threading
-import traceback
-
 import smach
 
-__all__ = ['State','CBState']
+__all__ = ['State', 'CBState']
+
 
 class State(object):
     """Base class for SMACH states.
@@ -15,6 +12,7 @@ class State(object):
     declared before the state goes active (when its C{execute()} method is
     called) and are checked during construction.
     """
+
     def __init__(self, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
         """State constructor
         @type outcomes: list of str
@@ -121,6 +119,7 @@ class State(object):
         """Sets action on shutdown to request_preempt"""
         self._shutdown_requested = True
         self.request_preempt()
+
 
 class CBState(State):
     def __init__(self, cb, cb_args=[], cb_kwargs={}, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):

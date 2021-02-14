@@ -1,4 +1,3 @@
-
 import traceback
 import threading
 from contextlib import contextmanager
@@ -6,6 +5,7 @@ from contextlib import contextmanager
 import smach
 
 __all__ = ['Container']
+
 
 class Container(smach.state.State):
     """Smach container interface.
@@ -189,7 +189,6 @@ class Container(smach.state.State):
                 cb(self.userdata, terminal_states, outcome, *args)
         except:
             smach.logerr("Could not execute termination callback: "+traceback.format_exc())
-
 
     # Context manager methods
     def __enter__(self):
