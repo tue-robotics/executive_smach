@@ -50,23 +50,18 @@ class Iterator(smach.container.Container):
         self._final_outcome_map = {}
         self._exhausted_outcome = exhausted_outcome
 
-
     ### Construction Methods
     @staticmethod
     def set_iteritems(it, it_label='it_data'):
         """Set the list or generator for the iterator to iterate over.
 
         @type it: iterable
-        @param iteritems: Items to iterate over on each cycle
+        @param it: Items to iterate over on each cycle
 
         @type it_label: string
-        @param iteritems_label: The label that the item in the current
+        @param it_label: The label that the item in the current
         iteration will be given when it is put into the container's local
         userdata.
-
-        @type exhausted_outcome: string
-        @param exhausted_outcome: If the iterable is exhausted without a break
-        condition this outcome is emitted by the container.
         """
         # Get currently opened container
         self = Iterator._currently_opened_container()
