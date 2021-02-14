@@ -338,7 +338,7 @@ class Concurrence(smach.container.Container):
                 self._states[label].get_registered_input_keys(),
                 self._states[label].get_registered_output_keys(),
                 self._remappings[label]))
-        except Exception, e:
+        except Exception as e:
             self._user_code_exception = True
             self._child_exceptions[label] = e
             with self._done_cond:
