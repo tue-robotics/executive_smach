@@ -4,7 +4,7 @@ import threading
 
 
 __all__ = ['handle_shutdown', 'set_shutdown_handler',\
-        'is_shutdown','set_shutdown_cb',\
+        'is_shutdown','set_shutdown_check',\
         'cb_interface','has_smach_interface','CBInterface']
 
 def handle_shutdown(cb):
