@@ -16,11 +16,15 @@ class ConditionState(smach.State):
 
     def __init__(self,
                  cond_cb,
-                 input_keys=[],
-                 output_keys=[],
+                 input_keys=None,
+                 output_keys=None,
                  poll_rate=rospy.Duration(0.05),
                  timeout=None,
                  max_checks=1):
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         smach.State.__init__(self, outcomes=['true', 'false', 'preempted'], input_keys=input_keys,
                              output_keys=output_keys)
 

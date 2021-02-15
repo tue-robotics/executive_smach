@@ -14,8 +14,8 @@ class Sequence(smach.state_machine.StateMachine):
     def __init__(self,
                  outcomes,
                  connector_outcome,
-                 input_keys=[],
-                 output_keys=[]):
+                 input_keys=None,
+                 output_keys=None):
         """Constructor.
 
         @type outcomes: list of string
@@ -25,6 +25,10 @@ class Sequence(smach.state_machine.StateMachine):
         @param connector_outcome: The outcome used to connect states in the
         sequence.
         """
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         smach.state_machine.StateMachine.__init__(self, outcomes, input_keys, output_keys)
 
         self._last_added_seq_label = None

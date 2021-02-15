@@ -30,7 +30,13 @@ def has_smach_interface(obj):
 
 # Callback decorator for describing userdata
 class cb_interface(object):
-    def __init__(self, outcomes=[], input_keys=[], output_keys=[]):
+    def __init__(self, outcomes=None, input_keys=None, output_keys=None):
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         self._outcomes = outcomes
         self._input_keys = input_keys
         self._output_keys = output_keys
@@ -67,7 +73,7 @@ class CBInterface(object):
 
     """
 
-    def __init__(self, cb, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
+    def __init__(self, cb, outcomes=None, input_keys=None, output_keys=None, io_keys=None):
         """Describe callback SMACH interface.
 
         @type outcomes: array of strings
@@ -86,6 +92,14 @@ class CBInterface(object):
         from which it might read at runtime.
         """
 
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if io_keys is None:
+            io_keys = []
         self._input_keys = set(input_keys)
         self._input_keys.union(io_keys)
 

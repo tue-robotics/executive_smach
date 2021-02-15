@@ -30,15 +30,15 @@ class ActionServerWrapper(object):
     def __init__(self,
                  server_name, action_spec,
                  wrapped_container,
-                 succeeded_outcomes=[],
-                 aborted_outcomes=[],
-                 preempted_outcomes=[],
+                 succeeded_outcomes=None,
+                 aborted_outcomes=None,
+                 preempted_outcomes=None,
                  goal_key='action_goal',
                  feedback_key='action_feedback',
                  result_key='action_result',
-                 goal_slots_map={},
-                 feedback_slots_map={},
-                 result_slots_map={},
+                 goal_slots_map=None,
+                 feedback_slots_map=None,
+                 result_slots_map=None,
                  expand_goal_slots=False,
                  pack_result_slots=False
                  ):
@@ -78,6 +78,19 @@ class ActionServerWrapper(object):
         @param result_key: The userdata key into which the SMACH container
         can put result information from this action.
         """
+
+        if succeeded_outcomes is None:
+            succeeded_outcomes = []
+        if aborted_outcomes is None:
+            aborted_outcomes = []
+        if preempted_outcomes is None:
+            preempted_outcomes = []
+        if goal_slots_map is None:
+            goal_slots_map = {}
+        if feedback_slots_map is None:
+            feedback_slots_map = {}
+        if result_slots_map is None:
+            result_slots_map = {}
 
         # Store state machine
         self.wrapped_container = wrapped_container

@@ -129,7 +129,13 @@ class Const(object):
 class Remapper(object):
     """Key-remapping proxy to a SMACH userdata structure."""
 
-    def __init__(self, ud, input_keys=[], output_keys=[], remapping={}):
+    def __init__(self, ud, input_keys=None, output_keys=None, remapping=None):
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if remapping is None:
+            remapping = {}
         self._ud = ud
         self._input = input_keys
         self._output = output_keys

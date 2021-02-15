@@ -48,9 +48,9 @@ class Concurrence(smach.container.Container):
     def __init__(self,
                  outcomes,
                  default_outcome,
-                 input_keys=[],
-                 output_keys=[],
-                 outcome_map={},
+                 input_keys=None,
+                 output_keys=None,
+                 outcome_map=None,
                  outcome_cb=None,
                  child_termination_cb=None
                  ):
@@ -130,6 +130,12 @@ class Concurrence(smach.container.Container):
         the child states. It should not access any other resources.} 
 
         """
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if outcome_map is None:
+            outcome_map = {}
         smach.container.Container.__init__(self, outcomes, input_keys, output_keys)
 
         # List of concurrent states
@@ -181,10 +187,12 @@ class Concurrence(smach.container.Container):
 
     ### Construction methods
     @staticmethod
-    def add(label, state, remapping={}):
+    def add(label, state, remapping=None):
         """Add state to the opened concurrence.
         This state will need to terminate before the concurrence terminates.
         """
+        if remapping is None:
+            remapping = {}
         # Get currently opened container
         self = Concurrence._currently_opened_container()
 

@@ -17,21 +17,40 @@ class ServiceState(smach.State):
                  # Request Policy
                  request=None,
                  request_cb=None,
-                 request_cb_args=[],
-                 request_cb_kwargs={},
+                 request_cb_args=None,
+                 request_cb_kwargs=None,
                  request_key=None,
-                 request_slots=[],
+                 request_slots=None,
                  # Response Policy
                  response_cb=None,
-                 response_cb_args=[],
-                 response_cb_kwargs={},
+                 response_cb_args=None,
+                 response_cb_kwargs=None,
                  response_key=None,
-                 response_slots=[],
+                 response_slots=None,
                  # Keys
-                 input_keys=[],
-                 output_keys=[],
-                 outcomes=[],
+                 input_keys=None,
+                 output_keys=None,
+                 outcomes=None,
                  ):
+
+        if request_cb_args is None:
+            request_cb_args = []
+        if request_cb_kwargs is None:
+            request_cb_kwargs = {}
+        if request_slots is None:
+            request_slots = []
+        if response_cb_args is None:
+            response_cb_args = []
+        if response_cb_kwargs is None:
+            response_cb_kwargs = {}
+        if response_slots is None:
+            response_slots = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if outcomes is None:
+            outcomes = []
 
         smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'])
 

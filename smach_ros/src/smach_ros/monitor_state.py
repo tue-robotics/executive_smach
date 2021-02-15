@@ -12,7 +12,7 @@ class MonitorState(smach.State):
     A state that will check a given ROS topic with a condition function.
     """
 
-    def __init__(self, topic, msg_type, cond_cb, max_checks=-1, input_keys=[], output_keys=[]):
+    def __init__(self, topic, msg_type, cond_cb, max_checks=-1, input_keys=None, output_keys=None):
         """State constructor
         @type topic string
         @param topic the topic to monitor
@@ -26,6 +26,10 @@ class MonitorState(smach.State):
                all of them, the outcome will be 'valid'
         
         """
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         smach.State.__init__(
             self,
             outcomes=['valid', 'invalid', 'preempted'],

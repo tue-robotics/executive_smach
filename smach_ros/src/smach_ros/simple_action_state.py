@@ -31,20 +31,20 @@ class SimpleActionState(smach.State):
                  # Default goal
                  goal=None,
                  goal_key=None,
-                 goal_slots=[],
+                 goal_slots=None,
                  goal_cb=None,
-                 goal_cb_args=[],
-                 goal_cb_kwargs={},
+                 goal_cb_args=None,
+                 goal_cb_kwargs=None,
                  # Result modes
                  result_key=None,
-                 result_slots=[],
+                 result_slots=None,
                  result_cb=None,
-                 result_cb_args=[],
-                 result_cb_kwargs={},
+                 result_cb_args=None,
+                 result_cb_kwargs=None,
                  # Keys
-                 input_keys=[],
-                 output_keys=[],
-                 outcomes=[],
+                 input_keys=None,
+                 output_keys=None,
+                 outcomes=None,
                  # Timeouts
                  exec_timeout=None,
                  cancel_timeout=rospy.Duration(15.0),
@@ -113,6 +113,25 @@ class SimpleActionState(smach.State):
         @param server_wait_timeout: This is the timeout used for aborting while
         waiting for an action server to become active.
         """
+
+        if goal_slots is None:
+            goal_slots = []
+        if goal_cb_args is None:
+            goal_cb_args = []
+        if goal_cb_kwargs is None:
+            goal_cb_kwargs = {}
+        if result_slots is None:
+            result_slots = []
+        if result_cb_args is None:
+            result_cb_args = []
+        if result_cb_kwargs is None:
+            result_cb_kwargs = {}
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if outcomes is None:
+            outcomes = []
 
         # Initialize base class
         smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'])

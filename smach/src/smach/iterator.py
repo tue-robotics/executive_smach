@@ -13,25 +13,27 @@ class Iterator(smach.container.Container):
     order in which said states are added to the container.
     """
     def __init__(self,
-            outcomes,
-            input_keys,
-            output_keys,
-            it = [],
-            it_label = 'it_data',
-            exhausted_outcome = 'exhausted'):
+                 outcomes,
+                 input_keys,
+                 output_keys,
+                 it=None,
+                 it_label = 'it_data',
+                 exhausted_outcome = 'exhausted'):
         """Constructor.
 
         @type outcomes: list of string
         @param outcomes: The potential outcomes of this container.
 
         @type it: iterable
-        @param iteritems: Items to iterate over on each cycle
+        @param it: Items to iterate over on each cycle
 
         @type it_label: string
-        @param iteritems_label: The label that the item in the current
+        @param it_label: The label that the item in the current
         iteration will be given when it is put into the container's local
         userdata.
         """
+        if it is None:
+            it = []
         if exhausted_outcome not in outcomes:
             outcomes.append(exhausted_outcome)
         smach.container.Container.__init__(self, outcomes, input_keys, output_keys)
@@ -70,9 +72,9 @@ class Iterator(smach.container.Container):
     def set_contained_state(
             label,
             state,
-            loop_outcomes = [],
-            break_outcomes = [],
-            final_outcome_map = {}):
+            loop_outcomes=None,
+            break_outcomes=None,
+            final_outcome_map=None):
         """Set the contained state
 
         @type label: string
@@ -101,6 +103,12 @@ class Iterator(smach.container.Container):
         Unspecified contained state outcomes will fall through as
         container outcomes.
         """
+        if loop_outcomes is None:
+            loop_outcomes = []
+        if break_outcomes is None:
+            break_outcomes = []
+        if final_outcome_map is None:
+            final_outcome_map = {}
         # Get currently opened container
         self = Iterator._currently_opened_container()
 

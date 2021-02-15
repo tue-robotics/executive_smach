@@ -29,12 +29,17 @@ class StateMachine(smach.container.Container):
      - OUTCOME -> SM_OUTCOME
     """
 
-    def __init__(self, outcomes, input_keys=[], output_keys=[]):
+    def __init__(self, outcomes, input_keys=None, output_keys=None):
         """Constructor for smach StateMachine Container.
 
         @type outcomes: list of strings
         @param outcomes: The potential outcomes of this state machine.
         """
+
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
 
         # Call super's constructor
         smach.container.Container.__init__(self, outcomes, input_keys, output_keys)
