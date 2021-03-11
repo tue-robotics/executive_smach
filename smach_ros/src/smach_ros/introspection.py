@@ -10,10 +10,10 @@ import threading
 import rostopic
 import smach
 
-from smach_msgs.msg import SmachContainerStatus,SmachContainerInitialStatusCmd,SmachContainerStructure
+from smach_msgs.msg import SmachContainerStatus, SmachContainerInitialStatusCmd, SmachContainerStructure
 
 
-__all__ = ['IntrospectionClient','IntrospectionServer']
+__all__ = ['IntrospectionClient', 'IntrospectionServer']
 
 # Topic names
 STATUS_TOPIC = '/smach/container_status'
@@ -33,7 +33,7 @@ def compatible_encode(load):
     return load.encode('latin1')
 
 
-class IntrospectionClient():
+class IntrospectionClient(object):
     def get_servers(self):
         """Get the base names that are broadcasting smach states."""
 

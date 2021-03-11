@@ -1,19 +1,18 @@
-
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
 import threading
-import traceback
 
 import smach
 
 __all__ = ['MonitorState']
 
+
 class MonitorState(smach.State):
     """
     A state that will check a given ROS topic with a condition function.
     """
-    def __init__(self, topic, msg_type, cond_cb, max_checks=-1,input_keys = [],output_keys=[]):
+
+    def __init__(self, topic, msg_type, cond_cb, max_checks=-1, input_keys=None, output_keys=None):
         """State constructor
         @type topic string
         @param topic the topic to monitor
@@ -27,11 +26,15 @@ class MonitorState(smach.State):
                all of them, the outcome will be 'valid'
         
         """
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         smach.State.__init__(
             self,
-            outcomes=['valid','invalid','preempted'],
-            input_keys = input_keys,
-            output_keys = output_keys)
+            outcomes=['valid', 'invalid', 'preempted'],
+            input_keys=input_keys,
+            output_keys=output_keys)
 
         self._topic = topic
         self._msg_type = msg_type
@@ -59,22 +62,22 @@ class MonitorState(smach.State):
             self.service_preempt()
             return 'preempted'
 
-        if self._max_checks > 0 and self._n_checks >= self._max_checks:
+        if 0 < self._max_checks <= self._n_checks:
             return 'valid'
 
         return 'invalid'
 
-    def _cb(self,msg,ud) :
+    def _cb(self, msg, ud):
         try:
             if self._cond_cb(ud, msg):
-                self._n_checks +=1
+                self._n_checks += 1
             else:
                 self._trigger_event.set()
         except Exception as e:
             rospy.logerr("Error thrown while executing condition callback %s: %s" % (str(self._cond_cb), e))
             self._trigger_event.set()
-            
-        if (self._max_checks > 0 and self._n_checks >= self._max_checks):
+
+        if 0 < self._max_checks <= self._n_checks:
             self._trigger_event.set()
 
     def request_preempt(self):

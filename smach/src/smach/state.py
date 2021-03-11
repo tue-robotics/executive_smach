@@ -1,10 +1,7 @@
-
-import threading
-import traceback
-
 import smach
 
-__all__ = ['State','CBState']
+__all__ = ['State', 'CBState']
+
 
 class State(object):
     """Base class for SMACH states.
@@ -15,6 +12,7 @@ class State(object):
     declared before the state goes active (when its C{execute()} method is
     called) and are checked during construction.
     """
+
     def __init__(self, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
         """State constructor
         @type outcomes: list of str
@@ -122,8 +120,9 @@ class State(object):
         self._shutdown_requested = True
         self.request_preempt()
 
+
 class CBState(State):
-    def __init__(self, cb, cb_args=[], cb_kwargs={}, outcomes=[], input_keys=[], output_keys=[], io_keys=[]):
+    def __init__(self, cb, cb_args=None, cb_kwargs=None, outcomes=None, input_keys=None, output_keys=None, io_keys=None):
         """Create s state from a single function.
 
         @type outcomes: list of str
@@ -141,6 +140,18 @@ class CBState(State):
         @param io_keys: The userdata keys to which this state might write or
         from which it might read at runtime.
         """
+        if cb_args is None:
+            cb_args = []
+        if cb_kwargs is None:
+            cb_kwargs = {}
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+        if io_keys is None:
+            io_keys = []
         State.__init__(self, outcomes, input_keys, output_keys, io_keys)
         self._cb = cb
         self._cb_args = cb_args

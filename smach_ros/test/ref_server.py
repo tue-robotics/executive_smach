@@ -28,10 +28,7 @@
 
 # Author: Alexander Sorokin. 
 # Based on code from ref_server.cpp by Vijay Pradeep
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
-
-import sys
 
 from actionlib.action_server import ActionServer
 from actionlib.msg import TestAction, TestFeedback, TestResult
@@ -102,6 +99,7 @@ class RefServer (ActionServer):
 
     def cancelCallback(self, gh):
         pass
+
 
 if __name__ == "__main__":
     rospy.init_node("ref_server")

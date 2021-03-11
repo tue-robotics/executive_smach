@@ -1,12 +1,9 @@
-
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
-import threading
 from multiprocessing.pool import ThreadPool
-import smach
 
 __all__ = ['set_preempt_handler', 'start']
+
 
 # Signal handler
 def set_preempt_handler(sc):
@@ -19,6 +16,7 @@ def set_preempt_handler(sc):
     @type sc: L{smach.Container}
     @param sc: Container to preempt on ROS shutdown.
     """
+
     ### Define handler
     def handler(sc):
         sc.request_preempt()
@@ -29,6 +27,7 @@ def set_preempt_handler(sc):
 
     ### Add handler
     rospy.core.add_client_shutdown_hook(lambda: handler(sc))
+
 
 def start(sm):
     pool = ThreadPool(processes=1)

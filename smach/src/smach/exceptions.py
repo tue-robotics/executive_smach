@@ -19,13 +19,16 @@ class InvalidTransitionError(SmachError):
     def __init__(self, message):
         SmachError.__init__(self, message)
 
+
 class InvalidStateError(SmachError):
     def __init__(self, message):
         SmachError.__init__(self, message)
 
+
 class InvalidUserCodeError(SmachError):
     def __init__(self, message):
         SmachError.__init__(self, message)
+
 
 class InvalidConstructionError(SmachError):
     def __init__(self, message):

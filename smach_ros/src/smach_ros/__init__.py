@@ -25,20 +25,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 
 # ROS imports
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
 # SMACH
 import smach
 
 __all__ = ['set_preempt_handler',
-        'start',
-        'ActionServerWrapper',
-        'IntrospectionClient','IntrospectionServer',
-        'SimpleActionState',
-        'ServiceState',
-        'MonitorState',
-        'ConditionState']
+           'start',
+           'ActionServerWrapper',
+           'IntrospectionClient',
+           'IntrospectionServer',
+           'SimpleActionState',
+           'ServiceState',
+           'MonitorState',
+           'ConditionState']
 
 # Setup smach-ros interface
 smach.set_loggers(

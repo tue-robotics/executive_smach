@@ -1,4 +1,3 @@
-
 import traceback
 import threading
 from contextlib import contextmanager
@@ -6,6 +5,7 @@ from contextlib import contextmanager
 import smach
 
 __all__ = ['Container']
+
 
 class Container(smach.state.State):
     """Smach container interface.
@@ -29,10 +29,16 @@ class Container(smach.state.State):
     _context_kwargs = []
 
     def __init__(self,
-            outcomes=[],
-            input_keys=[],
-            output_keys=[]):
+                 outcomes=None,
+                 input_keys=None,
+                 output_keys=None):
         """Initializes callback lists as empty lists."""
+        if outcomes is None:
+            outcomes = []
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
         smach.state.State.__init__(self, outcomes, input_keys, output_keys)
 
         self.userdata = smach.UserData()
@@ -119,7 +125,7 @@ class Container(smach.state.State):
                     smach.logwarn("Attempting to copy output key '%s', but this key does not exist." % ok)
 
     ### Callback registreation methods
-    def register_start_cb(self, start_cb, cb_args=[]):
+    def register_start_cb(self, start_cb, cb_args=None):
         """Adds a start callback to this container.
         Start callbacks receive arguments:
          - userdata 
@@ -127,9 +133,11 @@ class Container(smach.state.State):
          - initial_states
          - *cb_args
         """
+        if cb_args is None:
+            cb_args = []
         self._start_cbs.append((start_cb,cb_args))
 
-    def register_transition_cb(self, transition_cb, cb_args=[]):
+    def register_transition_cb(self, transition_cb, cb_args=None):
         """Adds a transition callback to this container.
         Transition callbacks receive arguments:
          - userdata 
@@ -137,9 +145,11 @@ class Container(smach.state.State):
          - active_states
          - *cb_args
         """
+        if cb_args is None:
+            cb_args = []
         self._transition_cbs.append((transition_cb,cb_args))
 
-    def register_termination_cb(self, termination_cb, cb_args=[]):
+    def register_termination_cb(self, termination_cb, cb_args=None):
         """Adds a termination callback to this state machine.
         Termination callbacks receive arguments:
          - userdata 
@@ -148,7 +158,9 @@ class Container(smach.state.State):
          - container_outcome
          - *cb_args
         """
-        self._termination_cbs.append((termination_cb, cb_args)) 
+        if cb_args is None:
+            cb_args = []
+        self._termination_cbs.append((termination_cb, cb_args))
 
     def call_start_cbs(self):
         """Calls the registered start callbacks.
@@ -189,7 +201,6 @@ class Container(smach.state.State):
                 cb(self.userdata, terminal_states, outcome, *args)
         except:
             smach.logerr("Could not execute termination callback: "+traceback.format_exc())
-
 
     # Context manager methods
     def __enter__(self):

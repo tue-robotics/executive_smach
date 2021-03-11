@@ -1,11 +1,10 @@
-
 import threading
 import traceback
-from contextlib import contextmanager
 
 import smach
 
 __all__ = ['StateMachine']
+
 
 ### State Machine class
 class StateMachine(smach.container.Container):
@@ -29,21 +28,27 @@ class StateMachine(smach.container.Container):
      - OUTCOME -> None (or unspecified)
      - OUTCOME -> SM_OUTCOME
     """
-    def __init__(self, outcomes, input_keys=[], output_keys=[]):
+
+    def __init__(self, outcomes, input_keys=None, output_keys=None):
         """Constructor for smach StateMachine Container.
 
         @type outcomes: list of strings
         @param outcomes: The potential outcomes of this state machine.
         """
 
+        if input_keys is None:
+            input_keys = []
+        if output_keys is None:
+            output_keys = []
+
         # Call super's constructor
         smach.container.Container.__init__(self, outcomes, input_keys, output_keys)
-        
+
         # Properties
         self._state_transitioning_lock = threading.Lock()
 
         # Current state of the state machine
-        self._is_running = False # True when a goal has been dispatched to and accepted by the state machine
+        self._is_running = False  # True when a goal has been dispatched to and accepted by the state machine
 
         self._initial_state_label = None
 
@@ -116,10 +121,10 @@ class StateMachine(smach.container.Container):
         # Check if th label already exists
         if label in self._states:
             raise smach.InvalidStateError(
-            'Attempting to add state with label "'+label+'" to state machine, but this label is already being used.')
+                'Attempting to add state with label "' + label + '" to state machine, but this label is already being used.')
 
         # Debug info
-        smach.logdebug("Adding state '"+str(label)+"' to the state machine.")
+        smach.logdebug("Adding state '" + str(label) + "' to the state machine.")
 
         # Create implicit terminal transitions, and combine them with the explicit transitions
         registered_outcomes = state.get_registered_outcomes()
@@ -177,7 +182,9 @@ class StateMachine(smach.container.Container):
         # Make sure the connector outcomes are valid for this state
         registered_outcomes = state.get_registered_outcomes()
         if not all(co in registered_outcomes for co in connector_outcomes):
-            raise smach.InvalidStateError("Attempting to auto-connect states with outcomes %s, but state '%s' only has registerd outcomes: %s" % (str(connector_outcomes), str(label), str(registered_outcomes)))
+            raise smach.InvalidStateError(
+                "Attempting to auto-connect states with outcomes %s, but state '%s' only has registerd outcomes: %s" % (
+                str(connector_outcomes), str(label), str(registered_outcomes)))
 
         # Store this state as the last state and store the connector outcomes
         self._last_added_label = label
@@ -214,7 +221,7 @@ class StateMachine(smach.container.Container):
         # Make sure the state exists
         if self._current_label not in self._states:
             raise smach.InvalidStateError("State '%s' does not exist. Available states are: %s" %
-                    (self._current_label, list(self._states.keys())))
+                                          (self._current_label, list(self._states.keys())))
 
         # Check if a preempt was requested before or while the last state was running
         if self.preempt_requested():
@@ -223,31 +230,37 @@ class StateMachine(smach.container.Container):
             if self._preempted_state is not None:
                 # We were preempted while the last state was running
                 if self._preempted_state.preempt_requested():
-                    smach.logwarn("Last state '%s' did not service preempt. Preempting next state '%s' before executing..." % (self._preempted_label, self._current_label))
+                    smach.logwarn(
+                        "Last state '%s' did not service preempt. Preempting next state '%s' before executing..." % (
+                        self._preempted_label, self._current_label))
                     # The flag was not reset, so we need to keep preempting 
                     # (this will reset the current preempt)
                     self._preempt_current_state()
                 else:
                     # The flag was reset, so the container can reset
-                    smach.logwarn("Preemption flag on preempted state '%s' was reset. Container can reset and continue..." % (self._preempted_label))
-                    smach.logwarn("This could be errornous because state machine should preempt and we still continue. Most likely we will just preempt execution")
+                    smach.logwarn(
+                        "Preemption flag on preempted state '%s' was reset. Container can reset and continue..." % (
+                            self._preempted_label))
+                    smach.logwarn(
+                        "This could be errornous because state machine should preempt and we still continue. Most likely we will just preempt execution")
                     self._preempt_requested = False
                     self._preempted_state = None
             else:
                 # We were preempted after the last state was running
                 # So we should preempt this state before we execute it
-                smach.logwarn("State Machine preempted after the last state was running. Preempting state '%s' before executing..." %self._current_label)
+                smach.logwarn(
+                    "State Machine preempted after the last state was running. Preempting state '%s' before executing..." % self._current_label)
                 self._preempt_current_state()
 
         # Execute the state
         try:
             self._state_transitioning_lock.release()
             outcome = self._current_state.execute(
-                    smach.Remapper(
-                        self.userdata,
-                        self._current_state.get_registered_input_keys(),
-                        self._current_state.get_registered_output_keys(),
-                        self._remappings[self._current_label]))
+                smach.Remapper(
+                    self.userdata,
+                    self._current_state.get_registered_input_keys(),
+                    self._current_state.get_registered_output_keys(),
+                    self._remappings[self._current_label]))
             self._current_outcome = outcome
         except smach.InvalidUserCodeError as ex:
             smach.logerr("State '%s' failed to execute." % self._current_label)
@@ -262,18 +275,19 @@ class StateMachine(smach.container.Container):
         # Check if outcome was a potential outcome for this type of state
         if outcome not in self._current_state.get_registered_outcomes():
             raise smach.InvalidTransitionError(
-                    "Attempted to return outcome '%s' from state '%s' of"
-                    " type '%s' which only has registered outcomes: %s" %
-                    (outcome,
-                     self._current_label,
-                     self._current_state,
-                     self._current_state.get_registered_outcomes()))
+                "Attempted to return outcome '%s' from state '%s' of"
+                " type '%s' which only has registered outcomes: %s" %
+                (outcome,
+                 self._current_label,
+                 self._current_state,
+                 self._current_state.get_registered_outcomes()))
 
         # Check if this outcome is actually mapped to any target
         if outcome not in self._current_transitions:
-            raise smach.InvalidTransitionError("Outcome '%s' of state '%s' is not bound to any transition target. Bound transitions include: %s" %
-                    (str(outcome), str(self._current_label), str(self._current_transitions)))
-        
+            raise smach.InvalidTransitionError(
+                "Outcome '%s' of state '%s' is not bound to any transition target. Bound transitions include: %s" %
+                (str(outcome), str(self._current_label), str(self._current_transitions)))
+
         # Set the transition target
         transition_target = self._current_transitions[outcome]
 
@@ -290,7 +304,7 @@ class StateMachine(smach.container.Container):
             self.call_transition_cbs()
         else:
             # This is a terminal state
-            
+
             if self._preempt_requested and self._preempted_state is not None:
                 if not self._current_state.preempt_requested():
                     self.service_preempt()
@@ -305,19 +319,20 @@ class StateMachine(smach.container.Container):
 
                 # Spew some info
                 smach.loginfo("State machine terminating '%s':'%s':'%s'" %
-                                (last_state_label, outcome, transition_target))
+                              (last_state_label, outcome, transition_target))
 
                 # Call termination callbacks
-                self.call_termination_cbs([last_state_label],transition_target)
+                self.call_termination_cbs([last_state_label], transition_target)
 
                 return transition_target
             else:
-                raise smach.InvalidTransitionError("Outcome '%s' of state '%s' with transition target '%s' is neither a registered state nor a registered container outcome." %
-                        (outcome, self._current_label, transition_target))
+                raise smach.InvalidTransitionError(
+                    "Outcome '%s' of state '%s' with transition target '%s' is neither a registered state nor a registered container outcome." %
+                    (outcome, self._current_label, transition_target))
         return None
 
     ### State Interface
-    def execute(self, parent_ud = smach.UserData()):
+    def execute(self, parent_ud=smach.UserData()):
         """Run the state machine on entry to this state.
         This will set the "closed" flag and spin up the execute thread. Once
         this flag has been set, it will prevent more states from being added to
@@ -348,11 +363,11 @@ class StateMachine(smach.container.Container):
 
             # Spew some info
             smach.loginfo("State machine starting in initial state '%s' with userdata: \n\t%s" %
-                    (self._current_label, list(self.userdata.keys())))
+                          (self._current_label, list(self.userdata.keys())))
 
             if self._preempt_requested:
-                smach.logwarn("Preempt on State machine requested before even executing initial state. This could be a bug. Did last execution not service preemption?")
-
+                smach.logwarn(
+                    "Preempt on State machine requested before even executing initial state. This could be a bug. Did last execution not service preemption?")
 
             # Call start callbacks
             self.call_start_cbs()
@@ -372,7 +387,8 @@ class StateMachine(smach.container.Container):
             self._is_running = False
 
             if self._preempt_requested:
-                smach.logwarn("State machine about to return outcome even preemption requested and not served. Will service preemption")
+                smach.logwarn(
+                    "State machine about to return outcome even preemption requested and not served. Will service preemption")
                 self.service_preempt()
 
         return container_outcome
@@ -407,15 +423,18 @@ class StateMachine(smach.container.Container):
             try:
                 self._preempted_state.request_preempt()
             except:
-                smach.logerr("Failed to preempt contained state '%s': %s" % (self._preempted_label, traceback.format_exc()))
+                smach.logerr(
+                    "Failed to preempt contained state '%s': %s" % (self._preempted_label, traceback.format_exc()))
 
     ### Container interface
     def get_children(self):
         return self._states
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         if key not in self._states:
-            smach.logerr("Attempting to get state '%s' from StateMachine container. The only available states are: %s" % (key, str(list(self._states.keys()))))
+            smach.logerr(
+                "Attempting to get state '%s' from StateMachine container. The only available states are: %s" % (
+                key, str(list(self._states.keys()))))
             raise KeyError()
         return self._states[key]
 
@@ -441,8 +460,8 @@ class StateMachine(smach.container.Container):
 
     def get_internal_edges(self):
         int_edges = []
-        for (from_label,transitions) in ((k,self._transitions[k]) for k in self._transitions):
-            for (outcome,to_label) in ((k,transitions[k]) for k in transitions):
+        for (from_label, transitions) in ((k, self._transitions[k]) for k in self._transitions):
+            for (outcome, to_label) in ((k, transitions[k]) for k in transitions):
                 int_edges.append((outcome, from_label, to_label))
         return int_edges
 
@@ -459,7 +478,9 @@ class StateMachine(smach.container.Container):
         registered_outcomes = state.get_registered_outcomes()
         for outcome in transitions:
             if outcome not in registered_outcomes:
-                raise smach.InvalidTransitionError("Specified outcome '"+outcome+"' on state '"+label+"', which only has available registered outcomes: "+str(registered_outcomes))
+                raise smach.InvalidTransitionError(
+                    "Specified outcome '" + outcome + "' on state '" + label + "', which only has available registered outcomes: " + str(
+                        registered_outcomes))
 
     def check_consistency(self):
         """Check the entire state machine for consistency.
@@ -468,7 +489,7 @@ class StateMachine(smach.container.Container):
         with relevant information.
         """
         # Construct a set of available states
-        available_states = set(list(self._states.keys())+list(self.get_registered_outcomes()))
+        available_states = set(list(self._states.keys()) + list(self.get_registered_outcomes()))
 
         # Grab the registered outcomes for the state machine
         registered_sm_outcomes = self.get_registered_outcomes()
@@ -480,13 +501,14 @@ class StateMachine(smach.container.Container):
         if self._initial_state_label is None:
             errors = errors + "\n\tNo initial state set."
         elif self._initial_state_label not in self._states:
-            errors = errors + "\n\tInitial state label: '"+str(self._initial_state_label)+"' is not in the state machine."
+            errors = errors + "\n\tInitial state label: '" + str(
+                self._initial_state_label) + "' is not in the state machine."
 
         # Generate state specifications
         state_specs = [(label, self._states[label], self._transitions[label])
                        for label in self._states]
         # Iterate over all states
-        for label,state,transitions in state_specs:
+        for label, state, transitions in state_specs:
             # Check that all potential outcomes are registered in this state
             transition_states = set([s for s in transitions.values()
                                      if s is not None and s != ''])
@@ -513,7 +535,9 @@ class StateMachine(smach.container.Container):
 
         # Check errors
         if len(errors) > 0:
-            raise smach.InvalidTransitionError("State machine failed consistency check: "+errors+"\n\n\tAvailable states: "+str(list(available_states)))
+            raise smach.InvalidTransitionError(
+                "State machine failed consistency check: " + errors + "\n\n\tAvailable states: " + str(
+                    list(available_states)))
 
     ### Introspection methods
     def is_running(self):

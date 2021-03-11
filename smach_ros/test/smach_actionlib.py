@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 import rostest
 
@@ -9,10 +8,8 @@ import unittest
 from actionlib import *
 from actionlib.msg import *
 
-from smach import *
-from smach_ros import *
-
-from smach_msgs.msg import *
+from smach import cb_interface, CBInterface, Sequence, State
+from smach_ros import ActionServerWrapper, SimpleActionState
 
 # Static goals
 g1 = TestGoal(1)  # This goal should succeed
@@ -48,113 +45,115 @@ class TestActionlib(unittest.TestCase):
         with sq:
             # Test single goal policy
             Sequence.add('GOAL_STATIC',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal=g1))
+                         SimpleActionState(
+                             "reference_action", TestAction, goal=g1))
             Sequence.add('GOAL_KEY',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal_key='g1'))
+                         SimpleActionState(
+                             "reference_action", TestAction, goal_key='g1'))
             Sequence.add('GOAL_SLOTS',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal_slots=['goal']))
+                         SimpleActionState(
+                             "reference_action", TestAction, goal_slots=['goal']))
             Sequence.add('GOAL_SLOTS_REMAP',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal_slots=['goal']),
-                    remapping={'goal':'goal_alias'})
+                         SimpleActionState(
+                             "reference_action", TestAction, goal_slots=['goal']),
+                         remapping={'goal': 'goal_alias'})
 
             # Test goal callback
             def goal_cb_0(ud, default_goal):
                 return TestGoal(1)
+
             Sequence.add('GOAL_CB',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=goal_cb_0))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=goal_cb_0))
             Sequence.add('GOAL_CB_LAMBDA',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=lambda ud, goal: TestGoal(1)))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=lambda ud, goal: TestGoal(1)))
             Sequence.add('GOAL_CB_UD',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=lambda ud, goal: ud.g1,
-                        input_keys=['g1']))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=lambda ud, goal: ud.g1,
+                             input_keys=['g1']))
 
             @cb_interface(input_keys=['g1'])
             def goal_cb_1(ud, default_goal):
                 return ud.g1
+
             Sequence.add('GOAL_CB_UD_DECORATOR',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=goal_cb_1))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=goal_cb_1))
             Sequence.add('GOAL_CB_ARGS',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=lambda ud, goal, g: TestGoal(g),
-                        goal_cb_args=[1]))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=lambda ud, goal, g: TestGoal(g),
+                             goal_cb_args=[1]))
             Sequence.add('GOAL_CB_KWARGS',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=lambda ud, goal, gg: TestGoal(gg),
-                        goal_cb_kwargs={'gg':1}))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=lambda ud, goal, gg: TestGoal(gg),
+                             goal_cb_kwargs={'gg': 1}))
             Sequence.add('GOAL_CB_ARGS_KWARGS',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal_cb=lambda ud, goal, g, gg: TestGoal(g - gg),
-                        goal_cb_args=[2],
-                        goal_cb_kwargs={'gg':1}))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal_cb=lambda ud, goal, g, gg: TestGoal(g - gg),
+                             goal_cb_args=[2],
+                             goal_cb_kwargs={'gg': 1}))
 
             # Test overriding goal policies
             Sequence.add('GOAL_STATIC_SLOTS',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g2,
-                        goal_slots=['goal']))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g2,
+                             goal_slots=['goal']))
             Sequence.add('GOAL_STATIC_CB',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g2,
-                        goal_cb=CBInterface(
-                            lambda ud, goal: setattr(goal, 'goal', 1),
-                            output_keys=['goal'])))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g2,
+                             goal_cb=CBInterface(
+                                 lambda ud, goal: setattr(goal, 'goal', 1),
+                                 output_keys=['goal'])))
 
             # Test result policies
             Sequence.add('RESULT_KEY',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_key='res_key'))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_key='res_key'))
             Sequence.add('RESULT_KEY_CHECK', AssertUDState(['res_key']))
 
             Sequence.add('RESULT_CB',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_cb=CBInterface(
-                            lambda ud, res_stat, res: setattr(ud, 'res_cb', res),
-                            output_keys=['res_cb'])))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_cb=CBInterface(
+                                 lambda ud, res_stat, res: setattr(ud, 'res_cb', res),
+                                 output_keys=['res_cb'])))
             Sequence.add('RESULT_CB_CHECK', AssertUDState(['res_cb']))
 
             Sequence.add('RESULT_SLOTS',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_slots=['result']))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_slots=['result']))
             Sequence.add('RESULT_SLOTS_CHECK', AssertUDState(['result']))
 
             Sequence.add('RESULT_SLOTS_REMAP',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_slots=['result']),
-                    remapping={'result': 'res_alias'})
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_slots=['result']),
+                         remapping={'result': 'res_alias'})
             Sequence.add('RESULT_SLOTS_MAP_CHECK', AssertUDState(['res_alias']))
 
             Sequence.add('RESULT_CB_OUTCOME',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_cb=CBInterface(
-                            lambda ud, res_stat, res: 'foobar',
-                            outcomes=['foobar'])))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_cb=CBInterface(
+                                 lambda ud, res_stat, res: 'foobar',
+                                 outcomes=['foobar'])))
 
         sq_outcome = sq.execute()
         assert sq_outcome == 'foobar'
@@ -167,28 +166,28 @@ class TestActionlib(unittest.TestCase):
 
         with sq:
             Sequence.add('GOAL_KEY',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal_key='action_goal'))
+                         SimpleActionState(
+                             "reference_action", TestAction, goal_key='action_goal'))
             Sequence.add('GOAL_SLOTS',
-                    SimpleActionState(
-                        "reference_action", TestAction, goal_slots=['goal']))
+                         SimpleActionState(
+                             "reference_action", TestAction, goal_slots=['goal']))
 
             @cb_interface(input_keys=['action_result'], output_keys=['action_result'])
             def res_cb(ud, status, res):
                 ud.action_result.result = res.result + 1
 
             Sequence.add('RESULT_CB',
-                    SimpleActionState(
-                        "reference_action", TestAction,
-                        goal=g1,
-                        result_cb=res_cb))
+                         SimpleActionState(
+                             "reference_action", TestAction,
+                             goal=g1,
+                             result_cb=res_cb))
 
         asw = ActionServerWrapper(
-                'reference_action_sm', TestAction, sq,
-                succeeded_outcomes=['succeeded'],
-                aborted_outcomes=['aborted'],
-                preempted_outcomes=['preempted'],
-                expand_goal_slots=True)
+            'reference_action_sm', TestAction, sq,
+            succeeded_outcomes=['succeeded'],
+            aborted_outcomes=['aborted'],
+            preempted_outcomes=['preempted'],
+            expand_goal_slots=True)
         asw.run_server()
 
         ac = SimpleActionClient('reference_action_sm', TestAction)
@@ -218,10 +217,10 @@ class TestActionlib(unittest.TestCase):
             Sequence.add('PREEMPT_ME', SlowRunningState())
 
         asw = ActionServerWrapper(
-                'preempt_action_sm', TestAction, sq,
-                succeeded_outcomes=['succeeded'],
-                aborted_outcomes=['aborted'],
-                preempted_outcomes=['preempted'])
+            'preempt_action_sm', TestAction, sq,
+            succeeded_outcomes=['succeeded'],
+            aborted_outcomes=['aborted'],
+            preempted_outcomes=['preempted'])
         asw.run_server()
 
         ac = SimpleActionClient('preempt_action_sm', TestAction)
@@ -258,5 +257,6 @@ def main():
     rospy.init_node('smach_actionlib', log_level=rospy.DEBUG)
     rostest.rosrun('smach', 'smach_actionlib', TestActionlib)
 
+
 if __name__ == "__main__":
-    main();
+    main()

@@ -1,17 +1,15 @@
-import roslib; roslib.load_manifest('smach_ros')
 import rospy
 
 import copy
-import threading
 import traceback
 
 from actionlib.simple_action_server import SimpleActionServer
-from smach_msgs.msg import *
 import smach
 
 __all__ = ['ActionServerWrapper']
 
-class ActionServerWrapper():
+
+class ActionServerWrapper(object):
     """SMACH container wrapper with actionlib ActionServer.
 
     Use this class to associate an action server with a smach
@@ -30,20 +28,20 @@ class ActionServerWrapper():
     """
 
     def __init__(self,
-            server_name, action_spec,
-            wrapped_container,
-            succeeded_outcomes = [],
-            aborted_outcomes = [],
-            preempted_outcomes = [],
-            goal_key = 'action_goal',
-            feedback_key = 'action_feedback',
-            result_key = 'action_result',
-            goal_slots_map = {},
-            feedback_slots_map = {},
-            result_slots_map = {},
-            expand_goal_slots = False,
-            pack_result_slots = False
-            ):
+                 server_name, action_spec,
+                 wrapped_container,
+                 succeeded_outcomes=None,
+                 aborted_outcomes=None,
+                 preempted_outcomes=None,
+                 goal_key='action_goal',
+                 feedback_key='action_feedback',
+                 result_key='action_result',
+                 goal_slots_map=None,
+                 feedback_slots_map=None,
+                 result_slots_map=None,
+                 expand_goal_slots=False,
+                 pack_result_slots=False
+                 ):
         """Constructor.
 
         @type server_name: string
@@ -81,6 +79,19 @@ class ActionServerWrapper():
         can put result information from this action.
         """
 
+        if succeeded_outcomes is None:
+            succeeded_outcomes = []
+        if aborted_outcomes is None:
+            aborted_outcomes = []
+        if preempted_outcomes is None:
+            preempted_outcomes = []
+        if goal_slots_map is None:
+            goal_slots_map = {}
+        if feedback_slots_map is None:
+            feedback_slots_map = {}
+        if result_slots_map is None:
+            result_slots_map = {}
+
         # Store state machine
         self.wrapped_container = wrapped_container
         """State machine that this wrapper talks to."""
@@ -116,10 +127,10 @@ class ActionServerWrapper():
 
         # Construct action server (don't start it until later)
         self._action_server = SimpleActionServer(
-                self._server_name,
-                self._action_spec,
-                execute_cb=self.execute_cb,
-                auto_start=False)
+            self._server_name,
+            self._action_spec,
+            execute_cb=self.execute_cb,
+            auto_start=False)
 
         # Store and check the terminal outcomes
         self._succeeded_outcomes = set(succeeded_outcomes)
@@ -130,7 +141,8 @@ class ActionServerWrapper():
         card_of_unions = len(self._succeeded_outcomes | self._aborted_outcomes | self._preempted_outcomes)
         sum_of_cards = (len(self._succeeded_outcomes) + len(self._aborted_outcomes) + len(self._preempted_outcomes))
         if card_of_unions != sum_of_cards:
-            rospy.logerr("Succeeded, aborted, and preempted outcome lists were not mutually disjoint... expect undefined behavior.")
+            rospy.logerr(
+                "Succeeded, aborted, and preempted outcome lists were not mutually disjoint... expect undefined behavior.")
 
     def run_server(self):
         """Run the state machine as an action server.
@@ -138,7 +150,7 @@ class ActionServerWrapper():
         """
 
         # Register action server callbacks
-        #self._action_server.register_goal_callback(self.goal_cb)
+        # self._action_server.register_goal_callback(self.goal_cb)
         self._action_server.register_preempt_callback(self.preempt_cb)
 
         # Stat server (because we disabled auto-start to register the callbacks)
@@ -166,7 +178,8 @@ class ActionServerWrapper():
         which we switch here. This method will determine from the state machine
         outcome which result should be returned to the action client for this goal.
         """
-        rospy.logdebug("Wrapped state machine has terminated with final state: "+str(terminal_states)+" and container outcome: "+str(container_outcome))
+        rospy.logdebug("Wrapped state machine has terminated with final state: " + str(
+            terminal_states) + " and container outcome: " + str(container_outcome))
 
     def publish_feedback(self, userdata):
         """Publish the feedback message in the userdata db.
@@ -180,7 +193,6 @@ class ActionServerWrapper():
             # and the constructor of this class sets the feedback key there to an empty struct
             # TODO figure out what the hell is going on here.
             self._action_server.publish_feedback(userdata[self._feedback_key])
-        
 
     ### Action server callbacks
     def execute_cb(self, goal):
@@ -192,10 +204,10 @@ class ActionServerWrapper():
 
         # If the state machine is running, we should preempt it before executing it
         # it again.
-        rospy.logdebug("Starting wrapped SMACH container") 
+        rospy.logdebug("Starting wrapped SMACH container")
 
         # Accept goal
-        #goal = self._action_server.accept_new_goal()
+        # goal = self._action_server.accept_new_goal()
 
         # Expand the goal into the root userdata for this server
         if self._expand_goal_slots:
@@ -203,20 +215,20 @@ class ActionServerWrapper():
                 self.userdata[slot] = getattr(goal, slot)
 
         # Store the goal in the container local userdate
-        self.userdata[self._goal_key] = goal       
+        self.userdata[self._goal_key] = goal
 
         # Store mapped goal slots in local userdata
-        for from_key,to_key in ((k,self._goal_slots_map[k]) for k in self._goal_slots_map):
-            self.userdata[to_key] = getattr(goal,from_key)
+        for from_key, to_key in ((k, self._goal_slots_map[k]) for k in self._goal_slots_map):
+            self.userdata[to_key] = getattr(goal, from_key)
 
         # Run the state machine (this blocks)
         try:
             container_outcome = self.wrapped_container.execute(
-                    smach.Remapper(
-                        self.userdata,
-                        self.wrapped_container.get_registered_input_keys(),
-                        self.wrapped_container.get_registered_output_keys(),
-                        {}))
+                smach.Remapper(
+                    self.userdata,
+                    self.wrapped_container.get_registered_input_keys(),
+                    self.wrapped_container.get_registered_output_keys(),
+                    {}))
 
         except smach.InvalidUserCodeError as ex:
             rospy.logerr("Exception thrown while executing wrapped container.")
@@ -231,7 +243,7 @@ class ActionServerWrapper():
         result = self.userdata[self._result_key]
 
         # Store mapped slots in result
-        for from_key, to_key in ((k,self._result_slots_map[k]) for k in self._result_slots_map):
+        for from_key, to_key in ((k, self._result_slots_map[k]) for k in self._result_slots_map):
             setattr(result, from_key, self.userdata[to_key])
 
         # If any of the result members have been returned to the parent ud
@@ -248,10 +260,9 @@ class ActionServerWrapper():
         elif container_outcome in self._preempted_outcomes:
             rospy.loginfo('PREEMPTED')
             self._action_server.set_preempted(result)
-        else: #if container_outcome in self._aborted_outcomes:
+        else:  # if container_outcome in self._aborted_outcomes:
             rospy.loginfo('ABORTED')
             self._action_server.set_aborted(result)
-
 
     def preempt_cb(self):
         """Action server preempt callback.

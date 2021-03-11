@@ -1,11 +1,9 @@
-
-import threading
 import traceback
-from contextlib import contextmanager
 
 import smach
 
 __all__ = ['Iterator']
+
 
 class Iterator(smach.container.Container):
     """Sequence Container
@@ -15,25 +13,27 @@ class Iterator(smach.container.Container):
     order in which said states are added to the container.
     """
     def __init__(self,
-            outcomes,
-            input_keys,
-            output_keys,
-            it = [],
-            it_label = 'it_data',
-            exhausted_outcome = 'exhausted'):
+                 outcomes,
+                 input_keys,
+                 output_keys,
+                 it=None,
+                 it_label = 'it_data',
+                 exhausted_outcome = 'exhausted'):
         """Constructor.
 
         @type outcomes: list of string
         @param outcomes: The potential outcomes of this container.
 
         @type it: iterable
-        @param iteritems: Items to iterate over on each cycle
+        @param it: Items to iterate over on each cycle
 
         @type it_label: string
-        @param iteritems_label: The label that the item in the current
+        @param it_label: The label that the item in the current
         iteration will be given when it is put into the container's local
         userdata.
         """
+        if it is None:
+            it = []
         if exhausted_outcome not in outcomes:
             outcomes.append(exhausted_outcome)
         smach.container.Container.__init__(self, outcomes, input_keys, output_keys)
@@ -50,23 +50,18 @@ class Iterator(smach.container.Container):
         self._final_outcome_map = {}
         self._exhausted_outcome = exhausted_outcome
 
-
     ### Construction Methods
     @staticmethod
     def set_iteritems(it, it_label='it_data'):
         """Set the list or generator for the iterator to iterate over.
 
         @type it: iterable
-        @param iteritems: Items to iterate over on each cycle
+        @param it: Items to iterate over on each cycle
 
         @type it_label: string
-        @param iteritems_label: The label that the item in the current
+        @param it_label: The label that the item in the current
         iteration will be given when it is put into the container's local
         userdata.
-
-        @type exhausted_outcome: string
-        @param exhausted_outcome: If the iterable is exhausted without a break
-        condition this outcome is emitted by the container.
         """
         # Get currently opened container
         self = Iterator._currently_opened_container()
@@ -77,9 +72,9 @@ class Iterator(smach.container.Container):
     def set_contained_state(
             label,
             state,
-            loop_outcomes = [],
-            break_outcomes = [],
-            final_outcome_map = {}):
+            loop_outcomes=None,
+            break_outcomes=None,
+            final_outcome_map=None):
         """Set the contained state
 
         @type label: string
@@ -108,6 +103,12 @@ class Iterator(smach.container.Container):
         Unspecified contained state outcomes will fall through as
         container outcomes.
         """
+        if loop_outcomes is None:
+            loop_outcomes = []
+        if break_outcomes is None:
+            break_outcomes = []
+        if final_outcome_map is None:
+            final_outcome_map = {}
         # Get currently opened container
         self = Iterator._currently_opened_container()
 
@@ -168,13 +169,11 @@ class Iterator(smach.container.Container):
             except:
                 raise smach.InvalidUserCodeError("Could not execute iterator state '%s' of type '%s': " % ( self._state_label, self._state) + traceback.format_exc())
 
-
-
             # Check if we should stop preemptively
             if self.preempt_requested():
                 self.service_preempt()
                 outcome = 'preempted'
-                break;
+                break
             if outcome in self._break_outcomes\
                     or (len(self._loop_outcomes) > 0 and outcome not in self._loop_outcomes):
                 break
