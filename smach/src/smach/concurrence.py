@@ -16,7 +16,7 @@ class Concurrence(smach.container.Container):
     
     This container can be configured to return a given outcome as a function of
     the outcomes of the contained states. This is specified in the constructor
-    of the class, or after construction with L{Concurrence.add_outcome_map}.
+    of the class.
 
     While a concurrence will not terminate until all if its children terminate,
     it is possible for it to preempt a subset of states 
@@ -69,12 +69,14 @@ class Concurrence(smach.container.Container):
         outcome of this container. Each outcome of the container is mapped
         to a dictionary mapping child labels onto outcomes. If none of the
         child-outcome maps is satisfied, the concurrence will terminate
-        with thhe default outcome.
-        
+        with the default outcome.
+
         For example, if the and_outcome_map is:
-            {'succeeded' : {'FOO':'succeeded', 'BAR':'done'},
-             'aborted' : {'FOO':'aborted'}}
-        Then the concurrence will terimate with outcome 'succeeded' only if
+
+        {'succeeded' : {'FOO':'succeeded', 'BAR':'done'},
+        'aborted' : {'FOO':'aborted'}}
+
+        Then the concurrence will terminate with outcome 'succeeded' only if
         BOTH states 'FOO' and 'BAR' have terminated
         with outcomes 'succeeded' and 'done', respectively. The outcome
         'aborted' will be returned by the concurrence if the state 'FOO'
@@ -91,7 +93,7 @@ class Concurrence(smach.container.Container):
         If a more complex outcome policy is required, see the user can
         provide an outcome callback. See outcome_cb, below.
 
-        @type child_termination_cb: callale
+        @type child_termination_cb: callable
         @param child_termination_cb: This callback gives the user the ability
         to force the concurrence to preempt running states given the
         termination of some other set of states. This is useful when using
@@ -119,7 +121,7 @@ class Concurrence(smach.container.Container):
         and it is passed the dictionary mapping state labels onto their
         respective outcomes.
 
-        If the callback returns a string, it will treated as the outcome of
+        If the callback returns a string, it will be treated as the outcome of
         the container.
 
         If the callback returns None, the concurrence will first check the
