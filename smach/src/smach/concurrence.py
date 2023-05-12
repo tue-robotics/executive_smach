@@ -64,7 +64,7 @@ class Concurrence(smach.container.Container):
         outcome map are satisfied by the outcomes of the contained states.
 
 
-        @type outcome_map: list
+        @type outcome_map: dict
         @param outcome_map: This is an outcome map for determining the
         outcome of this container. Each outcome of the container is mapped
         to a dictionary mapping child labels onto outcomes. If none of the
